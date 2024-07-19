@@ -40,5 +40,5 @@ func main() {
 	router.POST("/message", postMessage)
 	router.GET("/metrics", getMetrics)
 
-	router.Run("localhost:8080")
+	router.Run("0.0.0.0:8080")
 }
