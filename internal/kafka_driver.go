@@ -1,27 +1,25 @@
 package internal
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/IBM/sarama"
+	"github.com/gofrs/uuid"
 	"github.com/lovoo/goka"
-	"github.com/lovoo/goka/codec"
 )
 
 type KafkaDriver struct {
 	emitter *goka.Emitter
 }
 
-func NewKafkaDriver(url string) (*KafkaDriver, error) {
+func NewKafkaDriver(topic string, url string) (*KafkaDriver, error) {
 	cfg := goka.DefaultConfig()
 	cfg.Version = sarama.V3_5_0_0
 	goka.ReplaceGlobalConfig(cfg)
 
 	brokers := []string{url}
-	topic := goka.Stream("messages")
 
-	emitter, err := goka.NewEmitter(brokers, topic, new(codec.Bytes))
+	emitter, err := goka.NewEmitter(brokers, goka.Stream(topic), new(UuidCodec))
 	if err != nil {
 		return nil, fmt.Errorf("ERROR: could not create a kafka/goka emitter: %v", err)
 	}
@@ -31,15 +29,14 @@ func NewKafkaDriver(url string) (*KafkaDriver, error) {
 	}, nil
 }
 
-func (d *KafkaDriver) Emit(key string, value any) error {
-	payload, err := json.Marshal(value)
-	if err != nil {
-		return fmt.Errorf("ERROR: could not convert object to json: %v %v", value, err)
-	}
+// func (d *KafkaDriver) EmitNewMessage(msg Message) error {
+// 	return d.emitId("newMessage", msg.Id)
+// }
 
-	err = d.emitter.EmitSync(key, payload)
+func (d *KafkaDriver) EmitId(key string, id uuid.UUID) error {
+	err := d.emitter.EmitSync(key, id)
 	if err != nil {
-		return fmt.Errorf("ERROR: could not emit a kafka/goka message: %v", err)
+		return err
 	}
 
 	return nil

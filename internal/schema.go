@@ -1,11 +1,30 @@
 package internal
 
-type MessageCodec = JsonCodec[Message]
+import (
+	"time"
 
-type Message struct {
+	"github.com/gofrs/uuid"
+)
+
+type MessageCodec = JsonCodec[MessageRequest]
+
+type MessageRequest struct {
 	Content string `json:"content"`
 }
 
+type Message struct {
+	Id        uuid.UUID
+	Created   time.Time
+	Content   string
+	Processed bool
+}
+
 type Metrics struct {
-	MessagesReceived int `json:"messagesReceived"`
+	MessagesTotal     int `json:"messagesTotal"`
+	MessagesLastDay   int `json:"messagesLastDay"`
+	MessagesLastHour  int `json:"messagesLastHour"`
+	ProcessedTotal    int `json:"processedTotal"`
+	ProcessedLastDay  int `json:"processedLastDay"`
+	ProcessedLastHout int `json:"processedLastHout"`
+	// MessagesReceived int `json:"messagesReceived"`
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,42 +11,64 @@ import (
 )
 
 var (
-	metricsStore internal.Metrics
-	kafka        *internal.KafkaDriver
-	sql          *internal.SqlDriver
+	kafka   *internal.KafkaDriver
+	sql     *internal.SqlDriver
+	isDebug bool
 )
 
-func postMessage(c *gin.Context) {
-	var msg internal.Message
-
-	err := c.BindJSON(&msg)
-	if err != nil {
+func checkError(err error) {
+	if err == nil {
 		return
 	}
 
-	err = kafka.Emit("post", msg)
+	// this solution keeps the handler's flow going
+	// if !isDebug {
+	// 	log.Println("ERROR:", err)
+	// } else {
+	// }
+	log.Fatalf("ERROR: %v", err)
+}
+
+func postMessage(c *gin.Context) {
+	var req internal.MessageRequest
+
+	err := c.BindJSON(&req)
 	if err != nil {
-		log.Fatalln("ERROR: could not emit a kafka/goka message: ", err)
+		c.Status(http.StatusBadRequest)
+		return
 	}
 
-	metricsStore.MessagesReceived += 1
+	msg, err := internal.MessageFromReq(req)
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	err = sql.InsertMessage(msg)
+	checkError(err)
 
-	fmt.Println("Received a message:", msg)
+	err = kafka.EmitId("post", msg.Id)
+	checkError(err)
+
 	c.JSON(http.StatusCreated, msg)
 }
 
 func getMetrics(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, metricsStore)
+	metrics, err := sql.QueryMetrics()
+	checkError(err)
+
+	c.IndentedJSON(http.StatusOK, metrics)
 }
 
 func setup() (cleanup func()) {
+	isDebug = os.Getenv("MESSAGIO_DEBUG") == "1"
+
 	var err error
 	sql, err = internal.NewSqlDriver(os.Getenv("MESSAGIO_POSTGRES_URL"))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	kafka, err = internal.NewKafkaDriver(os.Getenv("MESSAGIO_KAFKA_URL"))
+	kafka, err = internal.NewKafkaDriver("messages", os.Getenv("MESSAGIO_KAFKA_URL"))
 	if err != nil {
 		log.Fatalln(err)
 	}
