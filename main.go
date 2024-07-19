@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/IBM/sarama"
 	"github.com/gin-gonic/gin"
@@ -35,8 +36,9 @@ type Metrics struct {
 
 var (
 	metricsStore Metrics
-	brokers                  = []string{"kafka:9092"}
+	brokers                  = []string{}
 	topic        goka.Stream = "messages"
+	emitter      *goka.Emitter
 )
 
 func postMessage(c *gin.Context) {
@@ -46,12 +48,6 @@ func postMessage(c *gin.Context) {
 	if err != nil {
 		return
 	}
-
-	emitter, err := goka.NewEmitter(brokers, topic, new(JsonCodec[Message]))
-	if err != nil {
-		log.Fatalln("ERROR: could not create a kafka/goka emitter:", err)
-	}
-	defer emitter.Finish()
 
 	err = emitter.EmitSync("post", msg)
 	if err != nil {
@@ -68,10 +64,30 @@ func getMetrics(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, metricsStore)
 }
 
-func main() {
+func setup() (cleanup func() error) {
+	var kafkaUrl string
+	if kafkaUrl = os.Getenv("MESSAGIO_KAFKA_URL"); kafkaUrl == "" {
+		log.Fatalln("ERROR: MESSAGIO_KAFKA_URL is not set")
+	}
+	brokers = []string{kafkaUrl}
+
 	cfg := goka.DefaultConfig()
 	cfg.Version = sarama.V3_5_0_0
 	goka.ReplaceGlobalConfig(cfg)
+
+	var err error
+	emitter, err = goka.NewEmitter(brokers, topic, new(JsonCodec[Message]))
+	if err != nil {
+		log.Fatalln("ERROR: could not create a kafka/goka emitter:", err)
+	}
+
+	cleanup = emitter.Finish
+	return
+}
+
+func main() {
+	cleanup := setup()
+	defer cleanup()
 
 	router := gin.Default()
 	router.POST("/message", postMessage)

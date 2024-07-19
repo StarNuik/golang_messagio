@@ -27,7 +27,12 @@ services:
   #     POSTGRES_DB: dev
   web:
     build: .
+    restart: unless-stopped
+    depends_on:
+      - kafka
     ports:
       - 8080:8080
     networks:
     - internal
+    environment:
+      MESSAGIO_KAFKA_URL: kafka:9092
