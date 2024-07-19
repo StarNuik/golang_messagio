@@ -31,7 +31,7 @@ Git репозиторий с кодом
 * сервис аналитики
 
 ### Условия
-* public github
+* public github repo
 * api doc
 * docker контейнер на github?
 * docker compose для локального запуска
