@@ -2,10 +2,12 @@ module github.com/golang_messagio
 
 go 1.22.4
 
-require github.com/gin-gonic/gin v1.10.0
+require (
+	github.com/IBM/sarama v1.41.3
+	github.com/gin-gonic/gin v1.10.0
+)
 
 require (
-	github.com/IBM/sarama v1.41.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.4.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
@@ -44,7 +46,6 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx-gofrs-uuid v0.0.0-20230224015001-1d428863c2e2
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/joho/godotenv v1.5.1

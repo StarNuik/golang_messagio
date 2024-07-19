@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gofrs/uuid"
 )
@@ -9,14 +10,16 @@ import (
 type UuidCodec struct{}
 
 func (*UuidCodec) Encode(value interface{}) ([]byte, error) {
-	data, ok := value.(uuid.UUID)
+	id, ok := value.(uuid.UUID)
 	if !ok {
 		return nil, fmt.Errorf("ERROR: value is not a Uuid")
 	}
-	return data[:], nil
+	payload := id.String()
+	log.Println("payload:", payload)
+	return []byte(payload), nil
 }
 
 func (*UuidCodec) Decode(data []byte) (interface{}, error) {
-	value, err := uuid.FromBytes(data)
+	value, err := uuid.FromString(string(data))
 	return value, err
 }

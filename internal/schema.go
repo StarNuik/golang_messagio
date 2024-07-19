@@ -6,7 +6,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type MessageCodec = JsonCodec[MessageRequest]
+type MessageCodec = JsonCodec[Message]
 
 type MessageRequest struct {
 	Content string `json:"content"`

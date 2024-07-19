@@ -21,19 +21,21 @@ services:
     image: postgres:latest
     ports:
     - 5432:5432
+    networks:
+    - internal
     environment:
       POSTGRES_USER: pg
       POSTGRES_PASSWORD: insecure
       POSTGRES_DB: dev
-  # web:
-  #   build: .
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - kafka
-  #   ports:
-  #     - 8080:8080
-  #   networks:
-  #   - internal
-  #   environment:
-  #     MESSAGIO_KAFKA_URL: kafka:9092
-  #     MESSAGIO_POSTGRES_URL: postgres://username:password@localhost:5432/database_name
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    ports:
+      - 8080:8080
+    networks:
+    - internal
+    environment:
+      MESSAGIO_KAFKA_URL: kafka:9092
+      MESSAGIO_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev

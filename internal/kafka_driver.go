@@ -6,6 +6,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/gofrs/uuid"
 	"github.com/lovoo/goka"
+	"github.com/lovoo/goka/codec"
 )
 
 type KafkaDriver struct {
@@ -18,8 +19,10 @@ func NewKafkaDriver(topic string, url string) (*KafkaDriver, error) {
 	goka.ReplaceGlobalConfig(cfg)
 
 	brokers := []string{url}
+	// brokers := []string{"localhost:9092"}
+	// top := goka.Stream("messages")
 
-	emitter, err := goka.NewEmitter(brokers, goka.Stream(topic), new(UuidCodec))
+	emitter, err := goka.NewEmitter(brokers, goka.Stream(topic), new(codec.String))
 	if err != nil {
 		return nil, fmt.Errorf("ERROR: could not create a kafka/goka emitter: %v", err)
 	}
@@ -34,13 +37,23 @@ func NewKafkaDriver(topic string, url string) (*KafkaDriver, error) {
 // }
 
 func (d *KafkaDriver) EmitId(key string, id uuid.UUID) error {
-	err := d.emitter.EmitSync(key, id)
+	err := d.emitter.EmitSync(key, id.String())
+	// err := d.emitter.EmitSync(key, "meow")
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
+// func (d *KafkaDriver) EmitMessage(key string, value Message) error {
+// 	payload, err := json.Marshal(value)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	d.emitter.EmitSync(key, payload)
+// 	return nil
+// }
 
 func (d *KafkaDriver) Cleanup() {
 	d.emitter.Finish()

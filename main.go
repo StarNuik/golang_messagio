@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	kafka   *internal.KafkaDriver
-	sql     *internal.SqlDriver
-	isDebug bool
+	kafka *internal.KafkaDriver
+	sql   *internal.SqlDriver
+	// isDebug bool
 )
 
 func checkError(err error) {
@@ -21,11 +21,6 @@ func checkError(err error) {
 		return
 	}
 
-	// this solution keeps the handler's flow going
-	// if !isDebug {
-	// 	log.Println("ERROR:", err)
-	// } else {
-	// }
 	log.Fatalf("ERROR: %v", err)
 }
 
@@ -46,7 +41,7 @@ func postMessage(c *gin.Context) {
 	err = sql.InsertMessage(msg)
 	checkError(err)
 
-	err = kafka.EmitId("post", msg.Id)
+	err = kafka.EmitId("new", msg.Id)
 	checkError(err)
 
 	c.JSON(http.StatusCreated, msg)
@@ -60,7 +55,7 @@ func getMetrics(c *gin.Context) {
 }
 
 func setup() (cleanup func()) {
-	isDebug = os.Getenv("MESSAGIO_DEBUG") == "1"
+	// isDebug = os.Getenv("MESSAGIO_DEBUG") == "1"
 
 	var err error
 	sql, err = internal.NewSqlDriver(os.Getenv("MESSAGIO_POSTGRES_URL"))
