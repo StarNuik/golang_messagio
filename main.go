@@ -1,55 +1,31 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/IBM/sarama"
 	"github.com/gin-gonic/gin"
-	"github.com/lovoo/goka"
+	"github.com/golang_messagio/internal"
+	_ "github.com/joho/godotenv/autoload"
 )
 
-// todo: is this the correct way? it looks v hacky
-type JsonCodec[T any] struct{}
-
-func (_ *JsonCodec[T]) Encode(value interface{}) ([]byte, error) {
-	data, err := json.Marshal(value)
-	return data, err
-}
-
-func (_ *JsonCodec[T]) Decode(data []byte) (interface{}, error) {
-	var t T
-	err := json.Unmarshal(data, &t)
-	return t, err
-}
-
-type Message struct {
-	Content string `json:"content"`
-}
-
-type Metrics struct {
-	MessagesReceived int `json:"messagesReceived"`
-}
-
 var (
-	metricsStore Metrics
-	brokers                  = []string{}
-	topic        goka.Stream = "messages"
-	emitter      *goka.Emitter
+	metricsStore internal.Metrics
+	kafka        *internal.KafkaDriver
+	sql          *internal.SqlDriver
 )
 
 func postMessage(c *gin.Context) {
-	var msg Message
+	var msg internal.Message
 
 	err := c.BindJSON(&msg)
 	if err != nil {
 		return
 	}
 
-	err = emitter.EmitSync("post", msg)
+	err = kafka.Emit("post", msg)
 	if err != nil {
 		log.Fatalln("ERROR: could not emit a kafka/goka message: ", err)
 	}
@@ -64,24 +40,22 @@ func getMetrics(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, metricsStore)
 }
 
-func setup() (cleanup func() error) {
-	var kafkaUrl string
-	if kafkaUrl = os.Getenv("MESSAGIO_KAFKA_URL"); kafkaUrl == "" {
-		log.Fatalln("ERROR: MESSAGIO_KAFKA_URL is not set")
-	}
-	brokers = []string{kafkaUrl}
-
-	cfg := goka.DefaultConfig()
-	cfg.Version = sarama.V3_5_0_0
-	goka.ReplaceGlobalConfig(cfg)
-
+func setup() (cleanup func()) {
 	var err error
-	emitter, err = goka.NewEmitter(brokers, topic, new(JsonCodec[Message]))
+	sql, err = internal.NewSqlDriver(os.Getenv("MESSAGIO_POSTGRES_URL"))
 	if err != nil {
-		log.Fatalln("ERROR: could not create a kafka/goka emitter:", err)
+		log.Fatalln(err)
 	}
 
-	cleanup = emitter.Finish
+	kafka, err = internal.NewKafkaDriver(os.Getenv("MESSAGIO_KAFKA_URL"))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	cleanup = func() {
+		sql.Cleanup()
+		kafka.Cleanup()
+	}
 	return
 }
 
