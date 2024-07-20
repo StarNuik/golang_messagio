@@ -1,7 +1,0 @@
-database: "postgres://pg:insecure@localhost:5432/dev"
-migrations: "./migrations"
-# schema:
-#   out: "./schema.sql"
-#   name: "public"
-#   data:
-#     - name: "%_enum"
