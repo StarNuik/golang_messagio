@@ -1,4 +1,9 @@
-FROM golang:1.22-alpine3.20 AS build
+FROM golang:1.22-alpine3.20 AS lib
+WORKDIR /pkg/lib
+COPY ../../go.mod ../../go.sum ./
+RUN go mod download
+
+FROM lib AS build
 WORKDIR /app
 
 COPY go.mod go.sum ./

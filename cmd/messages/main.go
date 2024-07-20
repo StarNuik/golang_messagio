@@ -1,32 +1,55 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid/v5"
-	"github.com/starnuik/golang_messagio/lib"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/starnuik/golang_messagio/pkg/lib"
 )
 
 type MessageReq struct {
-	Content string `json:content`
+	Content string `json:"content"`
 }
 
-type MessageValid struct {
+type Message struct {
 	Id      uuid.UUID
 	Created time.Time
 	Content string
 }
 
-func newMessage(req MessageReq) (MessageValid, error) {
-	return MessageValid{}, fmt.Errorf("not implemented")
+var sql *pgxpool.Pool
+
+func checkError(err error) {
+	if err != nil {
+		log.Fatalln("ERROR: ", err)
+	}
 }
 
-func postMessage(c *gin.Context) {
-	var req lib.MessageReq
+func main() {
+	var err error
+	sql, err = lib.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
+	checkError(err)
+
+	router := gin.Default()
+	router.GET("/healthcheck", healthcheck)
+	router.POST("/message", postMessageRequest)
+
+	router.Run("0.0.0.0:8080")
+}
+
+func healthcheck(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
+func postMessageRequest(c *gin.Context) {
+	var req MessageReq
 
 	err := c.BindJSON(&req)
 	if err != nil {
@@ -39,9 +62,35 @@ func postMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, req)
 }
 
-func main() {
-	router := gin.Default()
-	router.POST("/message", postMessage)
+func newMessage(req MessageReq) (Message, error) {
+	if len(req.Content) <= 0 {
+		return Message{}, fmt.Errorf("zero-length content")
+	}
 
-	router.Run("0.0.0.0:8080")
+	len := min(len(req.Content), 4096)
+	id, err := uuid.NewV4()
+	if err != nil {
+		return Message{}, fmt.Errorf("could not generate a uuid")
+	}
+
+	return Message{
+		Id:      id,
+		Created: time.Now().UTC(),
+		Content: req.Content[:len],
+	}, nil
+}
+
+func insertMessage(msg Message) error {
+	tag, err := sql.Exec(
+		context.Background(),
+		"INSERT INTO messages (msg_id, msg_created, msg_content) VALUES ($1, $2, $3)",
+		msg.Id, msg.Created, msg.Content)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		//todo: should this be a "stop the service" error or a plain log.error
+		return fmt.Errorf("rowsAffected != 1")
+	}
+	return nil
 }

@@ -4,13 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/starnuik/golang_messagio/pkg/lib"
+	// "github.com/starnuik/golang_messagio/pkg/lib"
 )
 
 func getMetrics(c *gin.Context) {
-	metrics := lib.Metrics{}
+	// metrics := lib.Metrics{}
 
-	c.IndentedJSON(http.StatusOK, metrics)
+	c.IndentedJSON(http.StatusOK, nil)
 }
 
 func main() {

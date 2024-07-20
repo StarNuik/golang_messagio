@@ -47,7 +47,7 @@ services:
     environment:
       PGM_MIGRATIONS: /migrations
       PGM_DATABASE: postgres://pg:insecure@postgres:5432/dev
-  https://doc.traefik.io/traefik/getting-started/quick-start/#launch-traefik-with-the-docker-provider
+  # https://doc.traefik.io/traefik/getting-started/quick-start/#launch-traefik-with-the-docker-provider
   traefik:
     image: traefik:v3.1
     command: --providers.docker
@@ -58,7 +58,7 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
   service-messages:
-    build: ./services/messages
+    build: ./cmd/messages
     networks:
     - internal
     environment:
@@ -67,7 +67,7 @@ services:
     labels:
       - "traefik.http.routers.service-messages.rule=Path(`/message`)"
   service-metrics:
-    build: ./services/metrics
+    build: ./cmd/metrics
     networks:
     - internal
     labels:
