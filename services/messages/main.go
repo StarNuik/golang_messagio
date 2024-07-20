@@ -1,12 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid/v5"
 	"github.com/starnuik/golang_messagio/lib"
 )
+
+type MessageReq struct {
+	Content string `json:content`
+}
+
+type MessageValid struct {
+	Id      uuid.UUID
+	Created time.Time
+	Content string
+}
+
+func newMessage(req MessageReq) (MessageValid, error) {
+	return MessageValid{}, fmt.Errorf("not implemented")
+}
 
 func postMessage(c *gin.Context) {
 	var req lib.MessageReq
