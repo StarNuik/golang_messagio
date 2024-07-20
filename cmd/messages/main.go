@@ -62,6 +62,12 @@ func postMessageRequest(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 	}
 
+	err = insertMessage(msg)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Fatalf("ERROR: %v", err)
+	}
+
 	c.JSON(http.StatusCreated, msg)
 }
 
