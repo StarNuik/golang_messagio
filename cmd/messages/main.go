@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/starnuik/golang_messagio/pkg/lib"
+	"github.com/starnuik/golang_messagio/internal"
 )
 
 type MessageReq struct {
@@ -34,7 +34,7 @@ func checkError(err error) {
 
 func main() {
 	var err error
-	sql, err = lib.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
+	sql, err = internal.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
 	checkError(err)
 
 	router := gin.Default()

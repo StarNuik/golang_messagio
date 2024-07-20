@@ -58,7 +58,9 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
   service-messages:
-    build: ./cmd/messages
+    build:
+      context: .
+      dockerfile: ./messages.dockerfile
     networks:
     - internal
     environment:
@@ -67,7 +69,9 @@ services:
     labels:
       - "traefik.http.routers.service-messages.rule=Path(`/message`)"
   service-metrics:
-    build: ./cmd/metrics
+    build:
+      context: .
+      dockerfile: ./metrics.dockerfile
     networks:
     - internal
     labels:

@@ -1,15 +1,14 @@
-FROM golang:1.22-alpine3.20 AS lib
-WORKDIR /pkg/lib
-COPY ../../go.mod ../../go.sum ./
-RUN go mod download
-
-FROM lib AS build
+FROM golang:1.22-alpine3.20 AS build
 WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY *.go ./
+ARG SERVICE_SRC=./cmd/metrics/**
+
+COPY $SERVICE_SRC ./
+COPY ./internal/** ./internal/
+# COPY *.go ./
 # COPY internal ./internal/
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/build
