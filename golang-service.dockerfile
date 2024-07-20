@@ -4,14 +4,17 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-ARG SERVICE_SRC=./cmd/metrics/**
+ARG SERVICE
+ARG SERVICE_SRC=./cmd/$SERVICE/**
 
 COPY $SERVICE_SRC ./
 COPY ./internal/** ./internal/
 # COPY *.go ./
 # COPY internal ./internal/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/build
+# --mount requires buildx
+# https://docs.docker.com/build/buildkit/#getting-started
+RUN --mount=type=cache,target="/root/.cache/go-build"  CGO_ENABLED=0 GOOS=linux go build -o /app/build
 
 FROM alpine:3.20 AS final
 WORKDIR /app

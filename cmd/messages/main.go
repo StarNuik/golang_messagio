@@ -57,9 +57,12 @@ func postMessageRequest(c *gin.Context) {
 		return
 	}
 
-	log.Println("req received:", req)
+	msg, err := newMessage(req)
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+	}
 
-	c.JSON(http.StatusCreated, req)
+	c.JSON(http.StatusCreated, msg)
 }
 
 func newMessage(req MessageReq) (Message, error) {

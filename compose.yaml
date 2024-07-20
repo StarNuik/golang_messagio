@@ -60,7 +60,9 @@ services:
   service-messages:
     build:
       context: .
-      dockerfile: ./messages.dockerfile
+      dockerfile: ./golang-service.dockerfile
+      args:
+      - SERVICE=messages
     networks:
     - internal
     environment:
@@ -71,7 +73,9 @@ services:
   service-metrics:
     build:
       context: .
-      dockerfile: ./metrics.dockerfile
+      dockerfile: ./golang-service.dockerfile
+      args:
+      - SERVICE=metrics
     networks:
     - internal
     labels:
