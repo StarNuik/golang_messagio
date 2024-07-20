@@ -1,4 +1,4 @@
-module github.com/starnuik/golang_messagio/services/messages
+module github.com/starnuik/golang_messagio/cmd/messages
 
 go 1.22.4
 

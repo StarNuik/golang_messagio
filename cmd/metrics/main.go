@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/starnuik/golang_messagio/lib"
+	"github.com/starnuik/golang_messagio/pkg/lib"
 )
 
 func getMetrics(c *gin.Context) {
