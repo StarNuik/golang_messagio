@@ -1,4 +1,4 @@
 #! /bin/bash
-curl localhost:8080/message \
+curl localhost/message \
     --request "POST" \
     --data "{\"content\":\"$1\"}"

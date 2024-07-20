@@ -1,0 +1,29 @@
+version: "3"
+
+networks:
+  internal:
+
+services:
+  # https://doc.traefik.io/traefik/getting-started/quick-start/#launch-traefik-with-the-docker-provider
+  traefik:
+    image: traefik:v3.1
+    command: --providers.docker --api.insecure=true
+    networks:
+    - internal
+    ports:
+    - 80:80
+    - 8080:8080 # api.insecure
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  service-messages:
+    build: ./services/messages
+    networks:
+    - internal
+    labels:
+      - "traefik.http.routers.service-messages.rule=Path(`/message`)"
+  service-metrics:
+    build: ./services/metrics
+    networks:
+    - internal
+    labels:
+      - "traefik.http.routers.service-metrics.rule=Path(`/metrics`)"

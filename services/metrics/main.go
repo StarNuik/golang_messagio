@@ -18,6 +18,5 @@ func main() {
 
 	router.GET("/metrics", getMetrics)
 
-	port := lib.EnvOr("MESSAGIO_PORT", "8080")
-	router.Run("0.0.0.0:" + port)
+	router.Run("0.0.0.0:8080")
 }

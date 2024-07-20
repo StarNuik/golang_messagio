@@ -1,2 +1,2 @@
 #! /bin/bash
-curl localhost:8081/metrics --request "GET"
+curl localhost/metrics --request "GET"
