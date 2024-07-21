@@ -72,6 +72,18 @@ services:
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
     labels:
       - "traefik.http.routers.service-messages.rule=Path(`/message`)"
+  service-message-worker:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./golang-service.dockerfile
+      args:
+      - SERVICE=message_worker
+    networks:
+    - internal
+    environment:
+      SERVICE_KAFKA_URL: kafka:9092
+      SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
   service-metrics:
     restart: unless-stopped
     build:
