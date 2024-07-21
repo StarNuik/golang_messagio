@@ -31,18 +31,18 @@ func TestNewMessage(t *testing.T) {
 	var err error
 
 	req = MessageReq{}
-	msg, err = requestToMessage(req)
+	msg, err = toMessage(req)
 	assert.NotNil(err, "empty request must return an error")
 
 	req = MessageReq{"string"}
-	msg, err = requestToMessage(req)
+	msg, err = toMessage(req)
 	assert.Nil(err)
 	assert.Equal(req.Content, msg.Content)
 	assert.True(!msg.Id.IsNil(), "message has a uuid")
 	assert.True(msg.Created.After(time.Now().UTC().Add(-100 * time.Millisecond)))
 
 	req = MessageReq{randomString(8192)}
-	msg, err = requestToMessage(req)
+	msg, err = toMessage(req)
 	assert.Nil(err)
 	assert.True(len(msg.Content) == 4096, "trim message length")
 }

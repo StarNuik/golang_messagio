@@ -25,7 +25,7 @@ func NewMetricsModel(pgUrl string) (*MetricsModel, error) {
 func (m *MetricsModel) Get() (Metrics, error) {
 	metrics := Metrics{}
 
-	row := m.sql.QueryRow(context.Background(),
+	row := m.sql.QueryRow(context.TODO(),
 		"SELECT COUNT(*) FROM messages;")
 
 	err := row.Scan(&metrics.MessagesTotal)

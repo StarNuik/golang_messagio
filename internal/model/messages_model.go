@@ -26,7 +26,7 @@ func NewMessagesModel(pgUrl string) (*MessagesModel, error) {
 
 func (m *MessagesModel) Insert(msg Message) error {
 	tag, err := m.sql.Exec(
-		context.Background(),
+		context.TODO(),
 		"INSERT INTO messages (msg_id, msg_created, msg_content) VALUES ($1, $2, $3)",
 		msg.Id, msg.Created, msg.Content)
 	if err != nil {

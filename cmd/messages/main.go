@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid/v5"
+	"github.com/segmentio/kafka-go"
 	"github.com/starnuik/golang_messagio/internal/model"
 )
 
@@ -24,7 +26,7 @@ func checkError(err error) {
 	}
 }
 
-func requestToMessage(req MessageReq) (model.Message, error) {
+func toMessage(req MessageReq) (model.Message, error) {
 	msg := model.Message{}
 
 	if len(req.Content) <= 0 {
@@ -44,6 +46,20 @@ func requestToMessage(req MessageReq) (model.Message, error) {
 	}, nil
 }
 
+func publishMessageCreated(msgId uuid.UUID) error {
+	cfg := kafka.WriterConfig{
+		Brokers: []string{os.Getenv("SERVICE_KAFKA_URL")},
+		Topic:   "db.message.created",
+	}
+	w := kafka.NewWriter(cfg)
+	//todo: fails on the first message publish
+	w.AllowAutoTopicCreation = true
+
+	kMsg := kafka.Message{Key: nil, Value: msgId.Bytes()}
+	err := w.WriteMessages(context.TODO(), kMsg)
+	return err
+}
+
 func postMessageRequest(c *gin.Context) {
 	var req MessageReq
 
@@ -53,7 +69,7 @@ func postMessageRequest(c *gin.Context) {
 		return
 	}
 
-	msg, err := requestToMessage(req)
+	msg, err := toMessage(req)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 		return
@@ -62,6 +78,11 @@ func postMessageRequest(c *gin.Context) {
 	err = messages.Insert(msg)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
+		checkError(err)
+	}
+
+	err = publishMessageCreated(msg.Id)
+	if err != nil {
 		checkError(err)
 	}
 
