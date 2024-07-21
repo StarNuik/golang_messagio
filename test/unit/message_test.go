@@ -1,4 +1,4 @@
-package message_test
+package internal_test
 
 import (
 	"crypto/sha256"
