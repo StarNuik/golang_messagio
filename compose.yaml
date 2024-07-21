@@ -116,6 +116,9 @@ services:
 # staging
   service-fake-load:
     restart: unless-stopped
+    deploy:
+      mode: replicated
+      replicas: 10
     build:
       context: .
       dockerfile: ./golang-service.dockerfile

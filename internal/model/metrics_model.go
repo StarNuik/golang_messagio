@@ -67,7 +67,7 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 	}
 
 	err := queryInt(m.sql, ctx,
-		"select count(*) from messages as m where not exists (select * from processed_workloads as p where m.msg_id=p.load_msg_id);",
+		"select count(*) from messages as m where not exists (select * from processed_workloads as p where m.msg_id=p.load_msg_id) and m.msg_created < now() - interval '1 minute';",
 		&metrics.OrphanMessages)
 	if err != nil {
 		return metrics, err

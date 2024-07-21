@@ -54,6 +54,7 @@ func main() {
 	for {
 		id, err := messageCreated.Read(context.TODO())
 		cmd.ExitIf(err)
-		processMessage(id)
+		// todo: better threading
+		go processMessage(id)
 	}
 }
