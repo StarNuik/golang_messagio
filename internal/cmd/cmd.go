@@ -9,20 +9,32 @@ import (
 )
 
 // calls os.Exit on err != nil
-func ServerError(err error) {
+func ExitIf(err error) {
 	if err != nil {
+		// todo: os.Exit doesnt let the go runtime to run defer-red code
 		log.Fatalln("ERROR: ", err)
 	}
 }
 
-// calls os.Exit on err != nil
-func ServerErrorResponse(err error, c *gin.Context) {
+// calls os.Exit on err != nil, send an http.InternalServerError
+func RespondAndExitIf(err error, c *gin.Context) {
 	if err != nil {
-		res := api.ErrorResponse{
-			Status:      http.StatusInternalServerError,
-			Description: err.Error(),
-		}
-		c.JSON(res.Status, res)
-		ServerError(err)
+		errorResponse(err, c, http.StatusInternalServerError)
+		ExitIf(err)
 	}
+}
+
+// sends an http.BadRequest, doesn't call os.Exit
+func RespondIf(err error, c *gin.Context) {
+	if err != nil {
+		errorResponse(err, c, http.StatusBadRequest)
+	}
+}
+
+func errorResponse(err error, c *gin.Context, status int) {
+	res := api.ErrorResponse{
+		Status:      status,
+		Description: err.Error(),
+	}
+	c.JSON(res.Status, res)
 }

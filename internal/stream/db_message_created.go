@@ -42,6 +42,7 @@ func (s *DbMessageCreated) reader() *kafka.Reader {
 		MaxBytes: s.maxBytes,
 	}
 	r := kafka.NewReader(cfg)
+	r.SetOffset(kafka.LastOffset)
 
 	s.sub = r
 	return r

@@ -22,19 +22,19 @@ func processMessage(id uuid.UUID) {
 	start := time.Now()
 
 	isProcessed, err := workloads.Exists(context.TODO(), id)
-	cmd.ServerError(err)
+	cmd.ExitIf(err)
 	if isProcessed {
 		return
 	}
 
 	msg, err := messages.Get(context.TODO(), id)
-	cmd.ServerError(err)
+	cmd.ExitIf(err)
 
 	load, err := message.Process(msg)
-	cmd.ServerError(err)
+	cmd.ExitIf(err)
 
 	err = workloads.Insert(context.TODO(), load)
-	cmd.ServerError(err)
+	cmd.ExitIf(err)
 
 	diff := time.Since(start)
 	log.Printf("sucess, duration: %v\n", diff)
@@ -42,7 +42,7 @@ func processMessage(id uuid.UUID) {
 
 func main() {
 	db, err := internal.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
-	cmd.ServerError(err)
+	cmd.ExitIf(err)
 	defer db.Close()
 
 	workloads = model.NewWorkloadsModel(db)
@@ -53,7 +53,7 @@ func main() {
 
 	for {
 		id, err := messageCreated.Read(context.TODO())
-		cmd.ServerError(err)
+		cmd.ExitIf(err)
 		processMessage(id)
 	}
 }

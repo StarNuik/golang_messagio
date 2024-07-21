@@ -100,17 +100,17 @@ services:
     environment:
       SERVICE_KAFKA_URL: kafka:9092
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
-  service-metrics:
+  service-query:
     restart: unless-stopped
     build:
       context: .
       dockerfile: ./golang-service.dockerfile
       args:
-      - SERVICE=metrics
+      - SERVICE=query
     networks:
     - internal
     labels:
-      - "traefik.http.routers.service-metrics.rule=Path(`/metrics`)"
+      - "traefik.http.routers.service-query.rule=PathPrefix(`/query`)"
     environment:
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
 # staging

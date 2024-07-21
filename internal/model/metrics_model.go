@@ -21,6 +21,7 @@ type Metrics struct {
 	Messages       MetricsSubUnit[int]
 	Processed      MetricsSubUnit[int]
 	ProcessedRatio MetricsSubUnit[float32]
+	OrphanMessages int
 }
 
 func NewMetricsModel(pool *pgxpool.Pool) *MetricsModel {
@@ -63,6 +64,13 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 		LastDay:    float32(metrics.Processed.LastDay) / float32(metrics.Messages.LastDay),
 		LastHour:   float32(metrics.Processed.LastHour) / float32(metrics.Messages.LastHour),
 		LastMinute: float32(metrics.Processed.LastMinute) / float32(metrics.Messages.LastMinute),
+	}
+
+	err := queryInt(m.sql, ctx,
+		"select count(*) from messages as m where not exists (select * from processed_workloads as p where m.msg_id=p.load_msg_id);",
+		&metrics.OrphanMessages)
+	if err != nil {
+		return metrics, err
 	}
 
 	return metrics, nil

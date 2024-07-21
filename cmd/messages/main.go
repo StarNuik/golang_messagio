@@ -22,21 +22,21 @@ func postMessageRequest(c *gin.Context) {
 
 	err := c.BindJSON(&req)
 	if err != nil {
-		c.Status(http.StatusBadRequest)
+		cmd.RespondIf(err, c)
 		return
 	}
 
 	msg, err := message.Validate(req)
 	if err != nil {
-		c.Status(http.StatusBadRequest)
+		cmd.RespondIf(err, c)
 		return
 	}
 
 	err = messages.Insert(context.TODO(), msg)
-	cmd.ServerErrorResponse(err, c)
+	cmd.RespondAndExitIf(err, c)
 
 	err = messageCreated.Publish(context.TODO(), msg.Id)
-	cmd.ServerErrorResponse(err, c)
+	cmd.RespondAndExitIf(err, c)
 
 	c.JSON(http.StatusCreated, msg)
 }
@@ -47,7 +47,7 @@ func healthcheck(c *gin.Context) {
 
 func main() {
 	db, err := internal.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
-	cmd.ServerError(err)
+	cmd.ExitIf(err)
 	defer db.Close()
 
 	messages = model.NewMessagesModel(db)
