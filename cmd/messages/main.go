@@ -51,7 +51,8 @@ func main() {
 
 	messages = model.NewMessagesModel(db)
 
-	messageCreated = stream.NewDbMessageCreated(os.Getenv("SERVICE_KAFKA_URL"))
+	messageCreated = stream.NewDbMessageCreated(os.Getenv("SERVICE_KAFKA_URL"), 10e3)
+	defer messageCreated.Close()
 
 	router := gin.Default()
 	router.GET("/healthcheck", healthcheck)

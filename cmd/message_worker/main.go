@@ -6,19 +6,18 @@ import (
 	"os"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/segmentio/kafka-go"
 	"github.com/starnuik/golang_messagio/internal"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/message"
 	"github.com/starnuik/golang_messagio/internal/model"
+	"github.com/starnuik/golang_messagio/internal/stream"
 )
 
 var workloads *model.WorkloadsModel
 var messages *model.MessagesModel
+var messageCreated *stream.DbMessageCreated
 
-func work(km kafka.Message) {
-	id := uuid.FromBytesOrNil(km.Value)
-
+func processMessage(id uuid.UUID) {
 	msg, err := messages.Get(context.TODO(), id)
 	cmd.ServerError(err)
 
@@ -28,8 +27,7 @@ func work(km kafka.Message) {
 	err = workloads.Insert(context.TODO(), load)
 	cmd.ServerError(err)
 
-	fmt.Printf("received %s, message is: %v\n", km.Topic, msg)
-	// fmt.Printf("message received, topic %s, offset %d: %s = %s\n", km.Topic, km.Offset, km.Key, id.String())
+	fmt.Printf("processed %s, message was: %v\n", messageCreated.Topic(), msg)
 }
 
 func main() {
@@ -40,18 +38,12 @@ func main() {
 	workloads = model.NewWorkloadsModel(db)
 	messages = model.NewMessagesModel(db)
 
-	cfg := kafka.ReaderConfig{
-		Brokers: []string{os.Getenv("SERVICE_KAFKA_URL")},
-		Topic:   "db.message.created",
-		// MaxBytes: 10e3,
-		MaxBytes: 16 * 4,
-	}
-	r := kafka.NewReader(cfg)
-	defer r.Close()
+	messageCreated = stream.NewDbMessageCreated(os.Getenv("SERVICE_KAFKA_URL"), 10e3)
+	defer messageCreated.Close()
 
 	for {
-		km, err := r.ReadMessage(context.Background())
+		id, err := messageCreated.Read(context.TODO())
 		cmd.ServerError(err)
-		work(km)
+		processMessage(id)
 	}
 }
