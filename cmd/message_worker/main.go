@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/gofrs/uuid/v5"
@@ -26,8 +25,6 @@ func processMessage(id uuid.UUID) {
 
 	err = workloads.Insert(context.TODO(), load)
 	cmd.ServerError(err)
-
-	fmt.Printf("processed %s, message was: %v\n", messageCreated.Topic(), msg)
 }
 
 func main() {

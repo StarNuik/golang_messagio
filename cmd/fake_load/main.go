@@ -64,22 +64,21 @@ func postRequest() {
 	if res.StatusCode() != http.StatusOK {
 		log.Println(endpoint, "endpoint failed with", res.StatusCode(), ", body:", string(res.Body()))
 	}
-	// log.Println("stub request:", req)
 }
 
 func main() {
 	endpoint = os.Getenv("SERVICE_MESSAGE_URL")
-	words = readWords("./google-10000-english-no-swears.txt")
+	words = readWords("./words.txt")
 	client = resty.New()
 
 	// send rand() requests every 60 seconds, somewhat evenly spaced
 	for {
-		messageDensity := randBetween(10, 100)
+		messageDensity := randBetween(100, 1000)
 		delay := time.Millisecond * time.Duration(60*1000/messageDensity)
 
 		log.Println("starting request batch: density", messageDensity, ", delay", delay)
 		for range messageDensity {
-			postRequest()
+			go postRequest()
 			time.Sleep(delay)
 		}
 	}

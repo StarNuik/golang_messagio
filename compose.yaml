@@ -7,6 +7,7 @@ networks:
 # kafka, postgres volumes
 
 services:
+# infra services
   # https://hub.docker.com/r/bitnami/kafka/
   kafka:
     image: bitnami/kafka:3.5
@@ -58,6 +59,7 @@ services:
     - 80:80
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
+# services
   service-messages:
     restart: unless-stopped
     build:
@@ -97,3 +99,19 @@ services:
       - "traefik.http.routers.service-metrics.rule=Path(`/metrics`)"
     environment:
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
+# staging
+  service-fake-load:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./golang-service.dockerfile
+      args:
+      - SERVICE=fake_load
+    networks:
+    - internal
+    volumes:
+    - ./words.txt:/app/words.txt
+    labels:
+      - "traefik.enable=false"
+    environment:
+      SERVICE_MESSAGE_URL: http://service-messages:8080/message
