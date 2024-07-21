@@ -6,10 +6,11 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/starnuik/golang_messagio/internal"
+	"github.com/starnuik/golang_messagio/internal/api"
 	"github.com/starnuik/golang_messagio/internal/model"
 )
 
-func Validate(req internal.MessageRequest) (model.Message, error) {
+func Validate(req api.MessageRequest) (model.Message, error) {
 	msg := model.Message{}
 
 	if len(req.Content) <= 0 {

@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/starnuik/golang_messagio/internal"
+	"github.com/starnuik/golang_messagio/internal/api"
 	"github.com/starnuik/golang_messagio/internal/message"
 	"github.com/starnuik/golang_messagio/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -34,22 +34,22 @@ func timeApproxNow(in time.Time) bool {
 func TestValidate(t *testing.T) {
 	assert := assert.New(t)
 
-	var req internal.MessageRequest
+	var req api.MessageRequest
 	var msg model.Message
 	var err error
 
-	req = internal.MessageRequest{}
+	req = api.MessageRequest{}
 	msg, err = message.Validate(req)
 	assert.NotNil(err, "empty request must return an error")
 
-	req = internal.MessageRequest{Content: "string"}
+	req = api.MessageRequest{Content: "string"}
 	msg, err = message.Validate(req)
 	assert.Nil(err)
 	assert.Equal(req.Content, msg.Content)
 	assert.True(!msg.Id.IsNil(), "message has a uuid")
 	assert.True(timeApproxNow(msg.Created))
 
-	req = internal.MessageRequest{Content: randomString(1025)}
+	req = api.MessageRequest{Content: randomString(1025)}
 	msg, err = message.Validate(req)
 	assert.NotNil(err, "max content size is 1024 bytes")
 }
@@ -61,7 +61,7 @@ func TestProcess(t *testing.T) {
 	var have model.Processed
 	var err error
 
-	from, _ = message.Validate(internal.MessageRequest{Content: "hello, world"})
+	from, _ = message.Validate(api.MessageRequest{Content: "hello, world"})
 	have, err = message.Process(from)
 	assert.Nil(err)
 	assert.True(!have.Id.IsNil())

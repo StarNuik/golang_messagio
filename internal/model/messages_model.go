@@ -2,10 +2,12 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -46,4 +48,15 @@ func (m *MessagesModel) Get(ctx context.Context, withId uuid.UUID) (Message, err
 	var msg Message
 	err := row.Scan(&msg.Id, &msg.Created, &msg.Content)
 	return msg, err
+}
+
+func (m *MessagesModel) Exists(ctx context.Context, withId uuid.UUID) (bool, error) {
+	_, err := m.Get(ctx, withId)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	return false, err
 }

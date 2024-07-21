@@ -5,12 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/starnuik/golang_messagio/internal/api"
 )
-
-type ErrorResponse struct {
-	status      int
-	description string
-}
 
 // calls os.Exit on err != nil
 func ServerError(err error) {
@@ -22,11 +18,11 @@ func ServerError(err error) {
 // calls os.Exit on err != nil
 func ServerErrorResponse(err error, c *gin.Context) {
 	if err != nil {
-		res := ErrorResponse{
-			status:      http.StatusInternalServerError,
-			description: err.Error(),
+		res := api.ErrorResponse{
+			Status:      http.StatusInternalServerError,
+			Description: err.Error(),
 		}
-		c.JSON(res.status, res)
+		c.JSON(res.Status, res)
 		ServerError(err)
 	}
 }

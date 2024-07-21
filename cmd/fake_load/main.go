@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/starnuik/golang_messagio/internal"
+	"github.com/starnuik/golang_messagio/internal/api"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 )
 
@@ -57,7 +57,7 @@ func isStatusSuccess(status int) bool {
 func postRequest() {
 	wordCount := randBetween(3, 25)
 	payload := randomWords(words, wordCount)
-	req := internal.MessageRequest{Content: payload}
+	req := api.MessageRequest{Content: payload}
 
 	res, err := client.R().
 		SetBody(req).

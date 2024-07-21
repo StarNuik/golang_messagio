@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/starnuik/golang_messagio/internal"
+	"github.com/starnuik/golang_messagio/internal/api"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/message"
 	"github.com/starnuik/golang_messagio/internal/model"
@@ -17,7 +18,7 @@ var messages *model.MessagesModel
 var messageCreated *stream.DbMessageCreated
 
 func postMessageRequest(c *gin.Context) {
-	var req internal.MessageRequest
+	var req api.MessageRequest
 
 	err := c.BindJSON(&req)
 	if err != nil {

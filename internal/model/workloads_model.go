@@ -2,10 +2,12 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/starnuik/golang_messagio/internal"
 )
@@ -26,12 +28,12 @@ func NewWorkloadsModel(pool *pgxpool.Pool) *WorkloadsModel {
 }
 
 func (m *WorkloadsModel) Insert(ctx context.Context, load Processed) error {
-	hash := internal.HashToString(load.Hash)
+	hex := internal.HashToString(load.Hash)
 
 	tag, err := m.sql.Exec(
 		ctx,
 		"INSERT INTO processed_workloads (load_id, load_msg_id, load_created, load_hash) VALUES ($1, $2, $3, $4)",
-		load.Id, load.MsgId, load.Created, hash)
+		load.Id, load.MsgId, load.Created, hex)
 	if err != nil {
 		return err
 	}
@@ -41,17 +43,31 @@ func (m *WorkloadsModel) Insert(ctx context.Context, load Processed) error {
 	return nil
 }
 
-func (m *WorkloadsModel) Exists(ctx context.Context, withMsgId uuid.UUID) (bool, error) {
-	var count int
-	row := m.sql.QueryRow(ctx,
-		"SELECT count(load_msg_id) FROM processed_workloads WHERE load_msg_id=$1;",
+func (m *WorkloadsModel) Get(ctx context.Context, withMsgId uuid.UUID) (Processed, error) {
+	row := m.sql.QueryRow(
+		ctx,
+		"SELECT load_id, load_msg_id, load_created, load_hash FROM processed_workloads WHERE load_msg_id=$1",
 		withMsgId)
-	err := row.Scan(&count)
+
+	var load Processed
+	var hex string
+
+	err := row.Scan(&load.Id, &load.MsgId, &load.Created, &hex)
 	if err != nil {
-		return false, err
+		return load, err
 	}
-	if count > 1 {
-		return false, fmt.Errorf("more than 2 items with the same id")
+	load.Hash, err = internal.StringToHash(hex)
+
+	return load, err
+}
+
+func (m *WorkloadsModel) Exists(ctx context.Context, withMsgId uuid.UUID) (bool, error) {
+	_, err := m.Get(ctx, withMsgId)
+	if err == nil {
+		return true, nil
 	}
-	return count == 1, nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	return false, err
 }
