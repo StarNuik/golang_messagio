@@ -8,6 +8,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/segmentio/kafka-go"
 	"github.com/starnuik/golang_messagio/internal/cmd"
+	"github.com/starnuik/golang_messagio/internal/message"
 	"github.com/starnuik/golang_messagio/internal/model"
 )
 
@@ -18,6 +19,12 @@ func work(km kafka.Message) {
 	id := uuid.FromBytesOrNil(km.Value)
 
 	msg, err := messages.Get(id)
+	cmd.ServerError(err)
+
+	load, err := message.Process(msg)
+	cmd.ServerError(err)
+
+	err = workloads.Insert(load)
 	cmd.ServerError(err)
 
 	fmt.Printf("received %s, message is: %v\n", km.Topic, msg)
