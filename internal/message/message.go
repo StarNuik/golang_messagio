@@ -33,14 +33,14 @@ func Validate(req internal.MessageRequest) (model.Message, error) {
 }
 
 func Process(msg model.Message) (model.Processed, error) {
-	var err error
 	load := model.Processed{}
 
-	load.Id, err = uuid.NewV4()
+	id, err := uuid.NewV4()
 	if err != nil {
 		return load, err
 	}
 
+	load.Id = id
 	load.MsgId = msg.Id
 	load.Created = time.Now().UTC()
 	load.Hash = internal.NewHash(msg.Content)

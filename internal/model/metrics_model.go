@@ -2,10 +2,12 @@ package model
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type MetricsModel struct {
-	model
+	sql *pgxpool.Pool
 }
 
 type Metrics struct {
@@ -17,15 +19,14 @@ type Metrics struct {
 	// ProcessedLastHout int
 }
 
-func NewMetricsModel(pgUrl string) (*MetricsModel, error) {
-	model, err := newModel(pgUrl)
-	return &MetricsModel{model: model}, err
+func NewMetricsModel(pool *pgxpool.Pool) *MetricsModel {
+	return &MetricsModel{sql: pool}
 }
 
-func (m *MetricsModel) Get() (Metrics, error) {
+func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 	metrics := Metrics{}
 
-	row := m.sql.QueryRow(context.TODO(),
+	row := m.sql.QueryRow(ctx,
 		"SELECT COUNT(*) FROM messages;")
 
 	err := row.Scan(&metrics.MessagesTotal)

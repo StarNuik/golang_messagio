@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type MessagesModel struct {
-	model
+	sql *pgxpool.Pool
 }
 
 type Message struct {
@@ -18,14 +19,13 @@ type Message struct {
 	Content string
 }
 
-func NewMessagesModel(pgUrl string) (*MessagesModel, error) {
-	model, err := newModel(pgUrl)
-	return &MessagesModel{model: model}, err
+func NewMessagesModel(pool *pgxpool.Pool) *MessagesModel {
+	return &MessagesModel{sql: pool}
 }
 
-func (m *MessagesModel) Insert(msg Message) error {
+func (m *MessagesModel) Insert(ctx context.Context, msg Message) error {
 	tag, err := m.sql.Exec(
-		context.TODO(),
+		ctx,
 		"INSERT INTO messages (msg_id, msg_created, msg_content) VALUES ($1, $2, $3)",
 		msg.Id, msg.Created, msg.Content)
 	if err != nil {
@@ -37,9 +37,9 @@ func (m *MessagesModel) Insert(msg Message) error {
 	return nil
 }
 
-func (m *MessagesModel) Get(withId uuid.UUID) (Message, error) {
+func (m *MessagesModel) Get(ctx context.Context, withId uuid.UUID) (Message, error) {
 	row := m.sql.QueryRow(
-		context.TODO(),
+		ctx,
 		"SELECT msg_id, msg_created, msg_content FROM messages WHERE msg_id=$1",
 		withId)
 

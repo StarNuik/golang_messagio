@@ -1,29 +1,21 @@
 package main
 
 import (
-	"log"
+	"context"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/starnuik/golang_messagio/internal"
+	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/model"
-	// "github.com/starnuik/golang_messagio/pkg/lib"
 )
 
 var metrics *model.MetricsModel
 
-func checkError(err error) {
-	if err != nil {
-		log.Fatalln("ERROR: ", err)
-	}
-}
-
 func getMetrics(c *gin.Context) {
-	metrics, err := metrics.Get()
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		checkError(err)
-	}
+	metrics, err := metrics.Get(context.TODO())
+	cmd.ServerErrorResponse(err, c)
 
 	c.IndentedJSON(http.StatusOK, metrics)
 }
@@ -33,9 +25,11 @@ func healthcheck(c *gin.Context) {
 }
 
 func main() {
-	var err error
-	metrics, err = model.NewMetricsModel(os.Getenv("SERVICE_POSTGRES_URL"))
-	checkError(err)
+	db, err := internal.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
+	cmd.ServerError(err)
+	defer db.Close()
+
+	metrics = model.NewMetricsModel(db)
 
 	router := gin.Default()
 

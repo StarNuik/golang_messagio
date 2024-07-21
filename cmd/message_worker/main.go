@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/segmentio/kafka-go"
+	"github.com/starnuik/golang_messagio/internal"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/message"
 	"github.com/starnuik/golang_messagio/internal/model"
@@ -18,13 +19,13 @@ var messages *model.MessagesModel
 func work(km kafka.Message) {
 	id := uuid.FromBytesOrNil(km.Value)
 
-	msg, err := messages.Get(id)
+	msg, err := messages.Get(context.TODO(), id)
 	cmd.ServerError(err)
 
 	load, err := message.Process(msg)
 	cmd.ServerError(err)
 
-	err = workloads.Insert(load)
+	err = workloads.Insert(context.TODO(), load)
 	cmd.ServerError(err)
 
 	fmt.Printf("received %s, message is: %v\n", km.Topic, msg)
@@ -32,13 +33,12 @@ func work(km kafka.Message) {
 }
 
 func main() {
-	pgUrl := os.Getenv("SERVICE_POSTGRES_URL")
+	db, err := internal.NewSqlPool(os.Getenv("SERVICE_POSTGRES_URL"))
+	cmd.ServerError(err)
+	defer db.Close()
 
-	var err error
-	workloads, err = model.NewWorkloadsModel(pgUrl)
-	cmd.ServerError(err)
-	messages, err = model.NewMessagesModel(pgUrl)
-	cmd.ServerError(err)
+	workloads = model.NewWorkloadsModel(db)
+	messages = model.NewMessagesModel(db)
 
 	cfg := kafka.ReaderConfig{
 		Brokers: []string{os.Getenv("SERVICE_KAFKA_URL")},
