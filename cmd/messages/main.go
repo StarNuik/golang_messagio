@@ -2,49 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid/v5"
 	"github.com/segmentio/kafka-go"
+	"github.com/starnuik/golang_messagio/internal"
+	"github.com/starnuik/golang_messagio/internal/cmd"
+	"github.com/starnuik/golang_messagio/internal/message"
 	"github.com/starnuik/golang_messagio/internal/model"
 )
 
-type MessageReq struct {
-	Content string `json:"content"`
-}
-
 var messages *model.MessagesModel
-
-func checkError(err error) {
-	if err != nil {
-		log.Fatalln("ERROR: ", err)
-	}
-}
-
-func toMessage(req MessageReq) (model.Message, error) {
-	msg := model.Message{}
-
-	if len(req.Content) <= 0 {
-		return msg, fmt.Errorf("zero-length content")
-	}
-
-	len := min(len(req.Content), 4096)
-	id, err := uuid.NewV4()
-	if err != nil {
-		return msg, fmt.Errorf("could not generate a uuid")
-	}
-
-	return model.Message{
-		Id:      id,
-		Created: time.Now().UTC(),
-		Content: req.Content[:len],
-	}, nil
-}
 
 func publishMessageCreated(msgId uuid.UUID) error {
 	cfg := kafka.WriterConfig{
@@ -61,7 +31,7 @@ func publishMessageCreated(msgId uuid.UUID) error {
 }
 
 func postMessageRequest(c *gin.Context) {
-	var req MessageReq
+	var req internal.MessageRequest
 
 	err := c.BindJSON(&req)
 	if err != nil {
@@ -69,22 +39,17 @@ func postMessageRequest(c *gin.Context) {
 		return
 	}
 
-	msg, err := toMessage(req)
+	msg, err := message.Validate(req)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
 	err = messages.Insert(msg)
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		checkError(err)
-	}
+	cmd.ServerErrorResponse(err, c)
 
 	err = publishMessageCreated(msg.Id)
-	if err != nil {
-		checkError(err)
-	}
+	cmd.ServerErrorResponse(err, c)
 
 	c.JSON(http.StatusCreated, msg)
 }
@@ -96,7 +61,7 @@ func healthcheck(c *gin.Context) {
 func main() {
 	var err error
 	messages, err = model.NewMessagesModel(os.Getenv("SERVICE_POSTGRES_URL"))
-	checkError(err)
+	cmd.ServerError(err)
 
 	router := gin.Default()
 	router.GET("/healthcheck", healthcheck)

@@ -13,10 +13,9 @@ type MessagesModel struct {
 }
 
 type Message struct {
-	Id        uuid.UUID
-	Created   time.Time
-	Content   string
-	Processed bool
+	Id      uuid.UUID
+	Created time.Time
+	Content string
 }
 
 func NewMessagesModel(pgUrl string) (*MessagesModel, error) {
@@ -36,4 +35,15 @@ func (m *MessagesModel) Insert(msg Message) error {
 		return fmt.Errorf("rowsAffected != 1")
 	}
 	return nil
+}
+
+func (m *MessagesModel) Get(withId uuid.UUID) (Message, error) {
+	row := m.sql.QueryRow(
+		context.TODO(),
+		"SELECT msg_id, msg_created, msg_content FROM messages WHERE msg_id=$1",
+		withId)
+
+	var msg Message
+	err := row.Scan(&msg.Id, &msg.Created, &msg.Content)
+	return msg, err
 }
