@@ -40,3 +40,18 @@ func (m *WorkloadsModel) Insert(ctx context.Context, load Processed) error {
 	}
 	return nil
 }
+
+func (m *WorkloadsModel) Exists(ctx context.Context, withMsgId uuid.UUID) (bool, error) {
+	var count int
+	row := m.sql.QueryRow(ctx,
+		"SELECT count(load_msg_id) FROM processed_workloads WHERE load_msg_id=$1;",
+		withMsgId)
+	err := row.Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count > 1 {
+		return false, fmt.Errorf("more than 2 items with the same id")
+	}
+	return count == 1, nil
+}

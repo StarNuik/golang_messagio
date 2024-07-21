@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -51,6 +50,10 @@ func randomWords(from []string, count int) string {
 	return strings.Join(words, " ")
 }
 
+func isStatusSuccess(status int) bool {
+	return status/100 == 2
+}
+
 func postRequest() {
 	wordCount := randBetween(3, 25)
 	payload := randomWords(words, wordCount)
@@ -61,7 +64,7 @@ func postRequest() {
 		Post(endpoint)
 	cmd.ServerError(err)
 
-	if res.StatusCode() != http.StatusOK {
+	if !isStatusSuccess(res.StatusCode()) {
 		log.Println(endpoint, "endpoint failed with", res.StatusCode(), ", body:", string(res.Body()))
 	}
 }

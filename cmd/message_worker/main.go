@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/starnuik/golang_messagio/internal"
@@ -17,6 +19,14 @@ var messages *model.MessagesModel
 var messageCreated *stream.DbMessageCreated
 
 func processMessage(id uuid.UUID) {
+	start := time.Now()
+
+	isProcessed, err := workloads.Exists(context.TODO(), id)
+	cmd.ServerError(err)
+	if isProcessed {
+		return
+	}
+
 	msg, err := messages.Get(context.TODO(), id)
 	cmd.ServerError(err)
 
@@ -25,6 +35,9 @@ func processMessage(id uuid.UUID) {
 
 	err = workloads.Insert(context.TODO(), load)
 	cmd.ServerError(err)
+
+	diff := time.Since(start)
+	log.Printf("sucess, duration: %v\n", diff)
 }
 
 func main() {

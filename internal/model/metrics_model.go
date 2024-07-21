@@ -11,14 +11,18 @@ type MetricsModel struct {
 }
 
 type Metrics struct {
-	MessagesTotal       int
-	MessagesLastDay     int
-	MessagesLastHour    int
-	MessagesLastMinute  int
-	ProcessedTotal      int
-	ProcessedLastDay    int
-	ProcessedLastHour   int
-	ProcessedLastMinute int
+	MessagesTotal            int
+	MessagesLastDay          int
+	MessagesLastHour         int
+	MessagesLastMinute       int
+	ProcessedTotal           int
+	ProcessedLastDay         int
+	ProcessedLastHour        int
+	ProcessedLastMinute      int
+	ProcessedRatio           float32
+	ProcessedRatioLastDay    float32
+	ProcessedRatioLastHour   float32
+	ProcessedRatioLastMinute float32
 }
 
 func NewMetricsModel(pool *pgxpool.Pool) *MetricsModel {
@@ -55,6 +59,11 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 			return metrics, err
 		}
 	}
+
+	metrics.ProcessedRatio = float32(metrics.ProcessedTotal) / float32(metrics.MessagesTotal)
+	metrics.ProcessedRatioLastDay = float32(metrics.ProcessedLastDay) / float32(metrics.MessagesLastDay)
+	metrics.ProcessedRatioLastHour = float32(metrics.ProcessedLastHour) / float32(metrics.MessagesLastHour)
+	metrics.ProcessedRatioLastMinute = float32(metrics.ProcessedLastMinute) / float32(metrics.MessagesLastMinute)
 
 	return metrics, nil
 }

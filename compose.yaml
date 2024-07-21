@@ -3,6 +3,10 @@ version: "3"
 networks:
   internal:
 
+volumes:
+  vol-postgres:
+  vol-kafka:
+
 # TODO
 # kafka, postgres volumes
 
@@ -13,6 +17,8 @@ services:
     image: bitnami/kafka:3.5
     networks:
     - internal
+    volumes:
+    - vol-kafka:/bitnami/kafka
     environment:
       KAFKA_CFG_NODE_ID: 0
       KAFKA_CFG_PROCESS_ROLES: controller,broker
@@ -21,10 +27,18 @@ services:
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+    # https://stackoverflow.com/a/78342248
+    # healthcheck:
+    #   test: test: kafka-topics.sh --list --bootstrap-server localhost:9092 || exit 1
+    #   interval: 1s
+    #   timeout: 60s
+    #   retries: 60
   postgres:
     image: postgres:latest
     networks:
     - internal
+    volumes:
+    - vol-postgres:/var/lib/postgresql/data 
     environment:
       POSTGRES_USER: pg
       POSTGRES_PASSWORD: insecure
@@ -34,7 +48,7 @@ services:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 6
   pgmigrate:
     image: ghcr.io/peterldowns/pgmigrate:latest
     command: pgmigrate migrate
