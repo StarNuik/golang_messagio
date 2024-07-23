@@ -63,72 +63,34 @@ services:
     environment:
       PGM_MIGRATIONS: /migrations
       PGM_DATABASE: postgres://pg:insecure@postgres:5432/dev
-  # https://doc.traefik.io/traefik/getting-started/quick-start/#launch-traefik-with-the-docker-provider
-  traefik:
-    image: traefik:v3.1
-    command: --providers.docker
-    networks:
-    - internal
-    ports:
-    - 80:80
-    volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
 # services
-  service-messages:
+  service-messagio:
     restart: unless-stopped
+    ports:
+    - 80:8080
     build:
       context: .
       dockerfile: ./golang-service.dockerfile
       args:
-      - SERVICE=messages
+      - SERVICE=messagio
     networks:
     - internal
     environment:
       SERVICE_KAFKA_URL: kafka:9092
-      SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
-    labels:
-      - "traefik.http.routers.service-messages.rule=Path(`/message`)"
-  service-message-worker:
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./golang-service.dockerfile
-      args:
-      - SERVICE=message_worker
-    networks:
-    - internal
-    environment:
-      SERVICE_KAFKA_URL: kafka:9092
-      SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
-  service-query:
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./golang-service.dockerfile
-      args:
-      - SERVICE=query
-    networks:
-    - internal
-    labels:
-      - "traefik.http.routers.service-query.rule=PathPrefix(`/query`)"
-    environment:
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
 # staging
-  service-fake-load:
-    restart: unless-stopped
-    deploy:
-      mode: replicated
-      replicas: 10
-    build:
-      context: .
-      dockerfile: ./golang-service.dockerfile
-      args:
-      - SERVICE=fake_load
-    networks:
-    - internal
-    volumes:
-    - ./words.txt:/app/words.txt
-    labels:
-      - "traefik.enable=false"
-    environment:
-      SERVICE_MESSAGE_URL: http://service-messages:8080/message
+  # service-fake-load:
+  #   restart: unless-stopped
+  #   build:
+  #     context: .
+  #     dockerfile: ./golang-service.dockerfile
+  #     args:
+  #     - SERVICE=fake_load
+  #   networks:
+  #   - internal
+  #   volumes:
+  #   - ./words.txt:/app/words.txt
+  #   labels:
+  #     - "traefik.enable=false"
+  #   environment:
+  #     SERVICE_MESSAGE_URL: http://service-messages:8080/message

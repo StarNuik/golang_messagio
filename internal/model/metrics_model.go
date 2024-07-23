@@ -10,17 +10,15 @@ type MetricsModel struct {
 	sql *pgxpool.Pool
 }
 
-type MetricsSubUnit[T any] struct {
-	AllTime    T
-	LastDay    T
-	LastHour   T
-	LastMinute T
-}
-
 type Metrics struct {
-	Messages       MetricsSubUnit[int]
-	Processed      MetricsSubUnit[int]
-	ProcessedRatio MetricsSubUnit[float32]
+	Messages struct {
+		Total      int
+		LastDay    int
+		LastHour   int
+		LastMinute int
+	}
+	ProcessedTotal int
+	ProcessedRatio float32
 	OrphanMessages int
 }
 
@@ -42,14 +40,11 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 		dest  *int
 		query string
 	}{
-		{&metrics.Messages.AllTime, "SELECT count(*) FROM messages;"},
+		{&metrics.Messages.Total, "SELECT count(*) FROM messages;"},
 		{&metrics.Messages.LastDay, "SELECT count(*) FROM messages WHERE msg_created > now() - interval '24 hour';"},
 		{&metrics.Messages.LastHour, "SELECT count(*) FROM messages WHERE msg_created > now() - interval '1 hour';"},
 		{&metrics.Messages.LastMinute, "SELECT count(*) FROM messages WHERE msg_created > now() - interval '1 minute';"},
-		{&metrics.Processed.AllTime, "SELECT count(*) FROM processed_workloads;"},
-		{&metrics.Processed.LastDay, "SELECT count(*) FROM processed_workloads WHERE load_created > now() - interval '24 hour';"},
-		{&metrics.Processed.LastHour, "SELECT count(*) FROM processed_workloads WHERE load_created > now() - interval '1 hour';"},
-		{&metrics.Processed.LastMinute, "SELECT count(*) FROM processed_workloads WHERE load_created > now() - interval '1 minute';"},
+		{&metrics.ProcessedTotal, "SELECT count(*) FROM messages WHERE msg_is_processed=true;"},
 	}
 
 	for _, item := range table {
@@ -59,15 +54,10 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 		}
 	}
 
-	metrics.ProcessedRatio = MetricsSubUnit[float32]{
-		AllTime:    float32(metrics.Processed.AllTime) / float32(metrics.Messages.AllTime),
-		LastDay:    float32(metrics.Processed.LastDay) / float32(metrics.Messages.LastDay),
-		LastHour:   float32(metrics.Processed.LastHour) / float32(metrics.Messages.LastHour),
-		LastMinute: float32(metrics.Processed.LastMinute) / float32(metrics.Messages.LastMinute),
-	}
+	metrics.ProcessedRatio = float32(metrics.ProcessedTotal) / float32(metrics.Messages.Total)
 
 	err := queryInt(m.sql, ctx,
-		"select count(*) from messages as m where not exists (select * from processed_workloads as p where m.msg_id=p.load_msg_id) and m.msg_created < now() - interval '1 minute';",
+		"select count(*) from messages where msg_is_processed = false and msg_created < now() - interval '1 minute';",
 		&metrics.OrphanMessages)
 	if err != nil {
 		return metrics, err
