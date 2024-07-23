@@ -11,8 +11,8 @@ import (
 // calls os.Exit on err != nil
 func Panic(err error) {
 	if err != nil {
-		// todo: os.Exit doesnt let the go runtime to run defer-red code
-		log.Fatalln("ERROR: ", err)
+		// todo: os.Exit doesnt let the go runtime to run defer-ed code
+		log.Panicln("ERROR: ", err)
 	}
 }
 

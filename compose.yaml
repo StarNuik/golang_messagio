@@ -13,20 +13,20 @@ volumes:
 services:
 # infra services
   # https://hub.docker.com/r/bitnami/kafka/
-  kafka:
-    image: bitnami/kafka:3.5
-    networks:
-    - internal
-    volumes:
-    - vol-kafka:/bitnami/kafka
-    environment:
-      KAFKA_CFG_NODE_ID: 0
-      KAFKA_CFG_PROCESS_ROLES: controller,broker
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+  # kafka:
+  #   image: bitnami/kafka:3.5
+  #   networks:
+  #   - internal
+  #   volumes:
+  #   - vol-kafka:/bitnami/kafka
+  #   environment:
+  #     KAFKA_CFG_NODE_ID: 0
+  #     KAFKA_CFG_PROCESS_ROLES: controller,broker
+  #     KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+  #     KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  #     KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+  #     KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  #     KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
     # https://stackoverflow.com/a/78342248
     # healthcheck:
     #   test: test: kafka-topics.sh --list --bootstrap-server localhost:9092 || exit 1
@@ -78,19 +78,18 @@ services:
     environment:
       SERVICE_KAFKA_URL: kafka:9092
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
-# staging
-  # service-fake-load:
-  #   restart: unless-stopped
-  #   build:
-  #     context: .
-  #     dockerfile: ./golang-service.dockerfile
-  #     args:
-  #     - SERVICE=fake_load
-  #   networks:
-  #   - internal
-  #   volumes:
-  #   - ./words.txt:/app/words.txt
-  #   labels:
-  #     - "traefik.enable=false"
-  #   environment:
-  #     SERVICE_MESSAGE_URL: http://service-messages:8080/message
+  service-fake-load:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./golang-service.dockerfile
+      args:
+      - SERVICE=fake_load
+    networks:
+    - internal
+    volumes:
+    - ./words.txt:/app/words.txt
+    labels:
+      - "traefik.enable=false"
+    environment:
+      SERVICE_MESSAGE_URL: http://service-messagio:8080/message
