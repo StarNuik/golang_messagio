@@ -23,7 +23,7 @@ func randBetween(min int, max int) int {
 
 func readWords(path string) []string {
 	file, err := os.Open(path)
-	cmd.ExitIf(err)
+	cmd.Panic(err)
 	defer file.Close()
 
 	words := []string{}
@@ -62,7 +62,7 @@ func postRequest() {
 	res, err := client.R().
 		SetBody(req).
 		Post(endpoint)
-	cmd.ExitIf(err)
+	cmd.Panic(err)
 
 	if !isStatusSuccess(res.StatusCode()) {
 		log.Println(endpoint, "endpoint failed with", res.StatusCode(), ", body:", string(res.Body()))
@@ -76,7 +76,7 @@ func main() {
 
 	// send rand() requests every 60 seconds, somewhat evenly spaced
 	for {
-		messageDensity := randBetween(100, 1000)
+		messageDensity := randBetween(1000, 10000)
 		delay := time.Millisecond * time.Duration(60*1000/messageDensity)
 
 		log.Println("starting request batch: density", messageDensity, ", delay", delay)

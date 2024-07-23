@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/starnuik/golang_messagio/internal"
 	"github.com/starnuik/golang_messagio/internal/api"
 	"github.com/starnuik/golang_messagio/internal/model"
 )
@@ -33,18 +32,7 @@ func Validate(req api.MessageRequest) (model.Message, error) {
 	}, nil
 }
 
-func Process(msg model.Message) (model.Processed, error) {
-	load := model.Processed{}
-
-	id, err := uuid.NewV4()
-	if err != nil {
-		return load, err
-	}
-
-	load.Id = id
-	load.MsgId = msg.Id
-	load.Created = time.Now().UTC()
-	load.Hash = internal.NewHash(msg.Content)
-
-	return load, nil
+func Process(msg model.Message) model.Message {
+	msg.IsProcessed = true
+	return msg
 }

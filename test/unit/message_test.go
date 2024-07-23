@@ -1,7 +1,6 @@
 package internal_test
 
 import (
-	"crypto/sha256"
 	"testing"
 	"time"
 
@@ -52,20 +51,4 @@ func TestValidate(t *testing.T) {
 	req = api.MessageRequest{Content: randomString(1025)}
 	msg, err = message.Validate(req)
 	assert.NotNil(err, "max content size is 1024 bytes")
-}
-
-func TestProcess(t *testing.T) {
-	assert := assert.New(t)
-
-	var from model.Message
-	var have model.Processed
-	var err error
-
-	from, _ = message.Validate(api.MessageRequest{Content: "hello, world"})
-	have, err = message.Process(from)
-	assert.Nil(err)
-	assert.True(!have.Id.IsNil())
-	assert.Equal(from.Id, have.MsgId)
-	assert.True(timeApproxNow(have.Created))
-	assert.Equal(sha256.Sum256([]byte(from.Content)), have.Hash)
 }
