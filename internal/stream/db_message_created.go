@@ -2,9 +2,10 @@ package stream
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/segmentio/kafka-go"
+	"github.com/starnuik/golang_messagio/internal/model"
 )
 
 type DbMessageCreated struct {
@@ -56,26 +57,29 @@ func NewDbMessageCreated(brokerUrl string, messageSize int) *DbMessageCreated {
 	}
 }
 
-func (s *DbMessageCreated) Publish(ctx context.Context, value uuid.UUID) error {
+func (s *DbMessageCreated) Publish(ctx context.Context, msg model.Message) error {
+	payload, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
 	w := s.writer()
-	km := kafka.Message{Key: nil, Value: value.Bytes()}
-	err := w.WriteMessages(ctx, km)
+	km := kafka.Message{Key: msg.Id.Bytes(), Value: payload}
+	err = w.WriteMessages(ctx, km)
 	return err
 }
 
-func (s *DbMessageCreated) Read(ctx context.Context) (uuid.UUID, error) {
+func (s *DbMessageCreated) Read(ctx context.Context) (model.Message, error) {
+	msg := model.Message{}
+
 	r := s.reader()
 	km, err := r.ReadMessage(ctx)
 	if err != nil {
-		return uuid.Nil, err
+		return msg, err
 	}
 
-	id, err := uuid.FromBytes(km.Value)
-	if err != nil {
-		return uuid.Nil, err
-	}
-
-	return id, nil
+	err = json.Unmarshal(km.Value, &msg)
+	return msg, err
 }
 
 func (s *DbMessageCreated) Close() error {

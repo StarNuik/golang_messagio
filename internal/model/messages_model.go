@@ -2,12 +2,10 @@ package model
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,9 +14,10 @@ type MessagesModel struct {
 }
 
 type Message struct {
-	Id      uuid.UUID
-	Created time.Time
-	Content string
+	Id          uuid.UUID
+	Created     time.Time
+	Content     string
+	IsProcessed bool
 }
 
 func NewMessagesModel(pool *pgxpool.Pool) *MessagesModel {
@@ -34,7 +33,21 @@ func (m *MessagesModel) Insert(ctx context.Context, msg Message) error {
 		return err
 	}
 	if tag.RowsAffected() != 1 {
-		return fmt.Errorf("rowsAffected != 1")
+		return fmt.Errorf("rows affected != 1")
+	}
+	return nil
+}
+
+func (m *MessagesModel) Update(ctx context.Context, msg Message) error {
+	tag, err := m.sql.Exec(
+		ctx,
+		"UPDATE messages SET msg_is_processed=$2 WHERE msg_id=$1",
+		msg.Id, msg.IsProcessed)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return fmt.Errorf("rows affected != 1")
 	}
 	return nil
 }
@@ -42,21 +55,10 @@ func (m *MessagesModel) Insert(ctx context.Context, msg Message) error {
 func (m *MessagesModel) Get(ctx context.Context, withId uuid.UUID) (Message, error) {
 	row := m.sql.QueryRow(
 		ctx,
-		"SELECT msg_id, msg_created, msg_content FROM messages WHERE msg_id=$1",
+		"SELECT msg_id, msg_created, msg_content, msg_is_processed FROM messages WHERE msg_id=$1",
 		withId)
 
 	var msg Message
-	err := row.Scan(&msg.Id, &msg.Created, &msg.Content)
+	err := row.Scan(&msg.Id, &msg.Created, &msg.Content, &msg.IsProcessed)
 	return msg, err
-}
-
-func (m *MessagesModel) Exists(ctx context.Context, withId uuid.UUID) (bool, error) {
-	_, err := m.Get(ctx, withId)
-	if err == nil {
-		return true, nil
-	}
-	if errors.Is(err, pgx.ErrNoRows) {
-		return false, nil
-	}
-	return false, err
 }
