@@ -51,7 +51,7 @@ func postMessage(c *gin.Context) {
 func processMessage(msg model.Message) {
 	msg = message.Process(msg)
 
-	err := messages.Update(context.Background(), msg)
+	err := messages.UpdateIsProcessed(context.Background(), msg)
 	if err != nil {
 		log.Println(err)
 		return

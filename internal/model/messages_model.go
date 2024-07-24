@@ -38,7 +38,7 @@ func (m *MessagesModel) Insert(ctx context.Context, msg Message) error {
 	return nil
 }
 
-func (m *MessagesModel) Update(ctx context.Context, msg Message) error {
+func (m *MessagesModel) UpdateIsProcessed(ctx context.Context, msg Message) error {
 	tag, err := m.sql.Exec(
 		ctx,
 		"UPDATE messages SET msg_is_processed=$2 WHERE msg_id=$1",

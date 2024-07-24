@@ -18,16 +18,12 @@ type Metrics struct {
 		LastMinute int
 	}
 	ProcessedTotal int
-	ProcessedRatio float32
+	ProcessedRatio float64
 	OrphanMessages int
 }
 
 func NewMetricsModel(pool *pgxpool.Pool) *MetricsModel {
 	return &MetricsModel{sql: pool}
-}
-
-func (m *MetricsModel) Close() {
-	m.sql.Close()
 }
 
 func queryInt(sql *pgxpool.Pool, ctx context.Context, query string, out *int) error {
@@ -58,7 +54,7 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 		}
 	}
 
-	metrics.ProcessedRatio = float32(metrics.ProcessedTotal) / float32(metrics.Messages.Total)
+	metrics.ProcessedRatio = float64(metrics.ProcessedTotal) / float64(metrics.Messages.Total)
 
 	err := queryInt(m.sql, ctx,
 		"select count(*) from messages where msg_is_processed = false and msg_created < now() - interval '1 minute';",
