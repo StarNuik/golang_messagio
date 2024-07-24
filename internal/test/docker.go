@@ -102,6 +102,7 @@ func (d *Docker) StartKafka() (string, error) {
 		Repository: "bitnami/kafka",
 		Tag:        "3.5",
 		Name:       "dockertest-kafka",
+		Hostname:   "localhost",
 		Env: []string{
 			"KAFKA_CFG_NODE_ID=0",
 			"KAFKA_CFG_PROCESS_ROLES=controller,broker",
@@ -119,6 +120,7 @@ func (d *Docker) StartKafka() (string, error) {
 
 	port := container.GetPort("9092/tcp")
 	url := fmt.Sprintf("localhost:%s", port)
+	log.Println("kafkaUrl", url)
 	return url, nil
 }
 

@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"context"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -42,6 +43,7 @@ func TestMain(m *testing.M) {
 	// kafka
 	brokerUrl, err = docker.StartKafka()
 	cmd.PanicIf(err)
+	log.Println("kafkaUrl", brokerUrl)
 
 	// postgres
 	pgUrl, err := docker.StartPostgres()
