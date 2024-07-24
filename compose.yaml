@@ -29,7 +29,7 @@ services:
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
     # https://stackoverflow.com/a/78342248
     healthcheck:
-      test: test: kafka-topics.sh --list --bootstrap-server localhost:9092 || exit 1
+      test: kafka-topics.sh --list --bootstrap-server localhost:9092 || exit 1
       interval: 1s
       timeout: 60s
       retries: 60

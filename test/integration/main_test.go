@@ -8,6 +8,8 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/segmentio/kafka-go"
+	"github.com/starnuik/golang_messagio/internal"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/model"
 	"github.com/starnuik/golang_messagio/internal/test"
@@ -33,7 +35,7 @@ func newMessage() model.Message {
 }
 
 func TestMain(m *testing.M) {
-	docker, err := test.NewDocker()
+	docker, err := test.NewDocker(60)
 	cmd.PanicIf(err)
 	defer docker.Close()
 
@@ -41,8 +43,18 @@ func TestMain(m *testing.M) {
 	brokerUrl, err = docker.StartKafka()
 	cmd.PanicIf(err)
 
-	// postgrres
+	// postgres
 	pgUrl, err := docker.StartPostgres()
+	cmd.PanicIf(err)
+
+	err = docker.Retry(func() error {
+		var err error
+		db, err = internal.NewSqlPool(ctx, pgUrl)
+		if err != nil {
+			return err
+		}
+		return db.Ping(ctx)
+	})
 	cmd.PanicIf(err)
 
 	db, err = docker.NewDbPool(pgUrl)
@@ -59,6 +71,22 @@ func TestMain(m *testing.M) {
 	resetDb()
 
 	testTime = time.Date(2006, 1, 2, 3, 4, 5, 0, time.UTC)
+
+	err = docker.Retry(func() error {
+		conn, err := kafka.Dial("tcp", brokerUrl)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		// https://github.com/segmentio/kafka-go/issues/389#issuecomment-569334516
+		_, err = conn.Brokers()
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	cmd.PanicIf(err)
 
 	m.Run()
 }

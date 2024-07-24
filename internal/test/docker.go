@@ -18,11 +18,12 @@ const pgPass = "insecure"
 const pgDb = "test"
 
 type Docker struct {
-	pool *dockertest.Pool
-	cts  []*dockertest.Resource
+	pool   *dockertest.Pool
+	cts    []*dockertest.Resource
+	expire uint
 }
 
-func NewDocker() (*Docker, error) {
+func NewDocker(expireSeconds uint) (*Docker, error) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, fmt.Errorf("Could not construct pool: %w", err)
@@ -33,10 +34,11 @@ func NewDocker() (*Docker, error) {
 		return nil, fmt.Errorf("Could not connect to Docker: %w", err)
 	}
 
-	pool.MaxWait = 10 * time.Second
+	pool.MaxWait = time.Duration(expireSeconds) * time.Second
 
 	return &Docker{
-		pool: pool,
+		pool:   pool,
+		expire: expireSeconds,
 	}, nil
 }
 
@@ -47,6 +49,10 @@ func (d *Docker) Close() {
 			log.Panicf("Could not purge resource: %s", err)
 		}
 	}
+}
+
+func (d *Docker) Retry(op func() error) error {
+	return d.pool.Retry(op)
 }
 
 func (d *Docker) NewDbPool(pgUrl string) (*pgxpool.Pool, error) {
@@ -72,6 +78,7 @@ func (d *Docker) StartPostgres() (string, error) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "latest",
+		Name:       "dockertest-postgres",
 		Env: []string{
 			"POSTGRES_USER=" + pgUser,
 			"POSTGRES_PASSWORD=" + pgPass,
@@ -94,12 +101,13 @@ func (d *Docker) StartKafka() (string, error) {
 	opts := dockertest.RunOptions{
 		Repository: "bitnami/kafka",
 		Tag:        "3.5",
+		Name:       "dockertest-kafka",
 		Env: []string{
 			"KAFKA_CFG_NODE_ID=0",
 			"KAFKA_CFG_PROCESS_ROLES=controller,broker",
 			"KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093",
 			"KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT",
-			"KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093",
+			"KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@localhost:9093",
 			"KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER",
 			"KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true",
 		},
@@ -129,7 +137,7 @@ func (d *Docker) startContainer(runOpts dockertest.RunOptions) (*dockertest.Reso
 		return nil, fmt.Errorf("Could not start container: %w", err)
 	}
 
-	container.Expire(120)
+	container.Expire(d.expire)
 	d.cts = append(d.cts, container)
 
 	return container, nil

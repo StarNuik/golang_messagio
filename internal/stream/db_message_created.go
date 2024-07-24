@@ -16,39 +16,6 @@ type DbMessageCreated struct {
 	sub      *kafka.Reader
 }
 
-func (s *DbMessageCreated) writer() *kafka.Writer {
-	if s.pub != nil {
-		return s.pub
-	}
-
-	cfg := kafka.WriterConfig{
-		Brokers: []string{s.broker},
-		Topic:   s.topic,
-	}
-	w := kafka.NewWriter(cfg)
-	w.AllowAutoTopicCreation = true
-
-	s.pub = w
-	return w
-}
-
-func (s *DbMessageCreated) reader() *kafka.Reader {
-	if s.sub != nil {
-		return s.sub
-	}
-
-	cfg := kafka.ReaderConfig{
-		Brokers:  []string{s.broker},
-		Topic:    s.topic,
-		MaxBytes: s.maxBytes,
-	}
-	r := kafka.NewReader(cfg)
-	r.SetOffset(kafka.LastOffset)
-
-	s.sub = r
-	return r
-}
-
 func NewDbMessageCreated(brokerUrl string, messageSize int) (*DbMessageCreated, error) {
 	const topic = "db.message.created"
 
@@ -56,7 +23,13 @@ func NewDbMessageCreated(brokerUrl string, messageSize int) (*DbMessageCreated, 
 	if err != nil {
 		return nil, err
 	}
-	conn.Close()
+	defer conn.Close()
+
+	// https://github.com/segmentio/kafka-go/issues/389#issuecomment-569334516
+	_, err = conn.Brokers()
+	if err != nil {
+		return nil, err
+	}
 
 	return &DbMessageCreated{
 		broker:   brokerUrl,
@@ -113,4 +86,37 @@ func (s *DbMessageCreated) Close() error {
 
 func (s *DbMessageCreated) Topic() string {
 	return s.topic
+}
+
+func (s *DbMessageCreated) writer() *kafka.Writer {
+	if s.pub != nil {
+		return s.pub
+	}
+
+	cfg := kafka.WriterConfig{
+		Brokers: []string{s.broker},
+		Topic:   s.topic,
+	}
+	w := kafka.NewWriter(cfg)
+	w.AllowAutoTopicCreation = true
+
+	s.pub = w
+	return w
+}
+
+func (s *DbMessageCreated) reader() *kafka.Reader {
+	if s.sub != nil {
+		return s.sub
+	}
+
+	cfg := kafka.ReaderConfig{
+		Brokers:  []string{s.broker},
+		Topic:    s.topic,
+		MaxBytes: s.maxBytes,
+	}
+	r := kafka.NewReader(cfg)
+	r.SetOffset(kafka.LastOffset)
+
+	s.sub = r
+	return r
 }
