@@ -102,7 +102,6 @@ func (d *Docker) StartKafka() (string, error) {
 		Repository: "bitnami/kafka",
 		Tag:        "3.5",
 		Name:       "dockertest-kafka",
-		Hostname:   "localhost",
 		Env: []string{
 			"KAFKA_CFG_NODE_ID=0",
 			"KAFKA_CFG_PROCESS_ROLES=controller,broker",

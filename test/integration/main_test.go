@@ -2,14 +2,12 @@ package integration_test
 
 import (
 	"context"
-	"log"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/segmentio/kafka-go"
 	"github.com/starnuik/golang_messagio/internal"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/model"
@@ -40,10 +38,14 @@ func TestMain(m *testing.M) {
 	cmd.PanicIf(err)
 	defer docker.Close()
 
+	// kafka's conn.Controller() broker hostname resolution
+	// requires me to launch kafka tests in a docker container
+	// (it resolves to containerId:port inside of the docker's network)
+
 	// kafka
-	brokerUrl, err = docker.StartKafka()
-	cmd.PanicIf(err)
-	log.Println("kafkaUrl", brokerUrl)
+	// brokerUrl, err = docker.StartKafka()
+	// cmd.PanicIf(err)
+	// log.Println("kafkaUrl", brokerUrl)
 
 	// postgres
 	pgUrl, err := docker.StartPostgres()
@@ -74,21 +76,21 @@ func TestMain(m *testing.M) {
 
 	testTime = time.Date(2006, 1, 2, 3, 4, 5, 0, time.UTC)
 
-	err = docker.Retry(func() error {
-		conn, err := kafka.Dial("tcp", brokerUrl)
-		if err != nil {
-			return err
-		}
-		defer conn.Close()
+	// err = docker.Retry(func() error {
+	// 	conn, err := kafka.Dial("tcp", brokerUrl)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	defer conn.Close()
 
-		// https://github.com/segmentio/kafka-go/issues/389#issuecomment-569334516
-		_, err = conn.Brokers()
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	cmd.PanicIf(err)
+	// 	// https://github.com/segmentio/kafka-go/issues/389#issuecomment-569334516
+	// 	_, err = conn.Brokers()
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// })
+	// cmd.PanicIf(err)
 
 	m.Run()
 }

@@ -96,10 +96,6 @@ func (s *kafkaStream) createTopic() error {
 		}
 	}
 
-	// if len(partitions) > 0 {
-	// 	return nil
-	// }
-
 	broker, err := conn.Controller()
 	if err != nil {
 		return err
