@@ -36,14 +36,15 @@ func main() {
 
 	var err error
 	metrics, err = model.NewMetricsModel(context.Background(), postgresUrl)
-	cmd.Panic(err)
+	cmd.PanicIf(err)
 	defer metrics.Close()
 
 	messages, err = model.NewMessagesModel(context.Background(), postgresUrl)
-	cmd.Panic(err)
+	cmd.PanicIf(err)
 	defer messages.Close()
 
-	messageCreated = stream.NewDbMessageCreated(kafkaUrl, 10e3)
+	messageCreated, err = stream.NewDbMessageCreated(kafkaUrl, 10e3)
+	cmd.PanicIf(err)
 	defer messageCreated.Close()
 
 	go messageReader()

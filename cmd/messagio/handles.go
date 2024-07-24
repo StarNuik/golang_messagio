@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -33,10 +34,16 @@ func postMessage(c *gin.Context) {
 	}
 
 	err = messages.Insert(context.TODO(), msg)
-	cmd.PanicAndRespond(err, c)
+	if err != nil {
+		cmd.ErrorResponse(err, c)
+		return
+	}
 
 	err = messageCreated.Publish(context.TODO(), msg)
-	cmd.PanicAndRespond(err, c)
+	if err != nil {
+		cmd.ErrorResponse(err, c)
+		return
+	}
 
 	c.JSON(http.StatusCreated, msg)
 }
@@ -44,13 +51,19 @@ func postMessage(c *gin.Context) {
 func processMessage(msg model.Message) {
 	msg = message.Process(msg)
 
-	err := messages.Update(context.TODO(), msg)
-	cmd.Panic(err)
+	err := messages.Update(context.Background(), msg)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func getMetrics(c *gin.Context) {
 	metrics, err := metrics.Get(context.TODO())
-	cmd.PanicAndRespond(err, c)
+	if err != nil {
+		cmd.ErrorResponse(err, c)
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, metrics)
 }
@@ -69,7 +82,10 @@ func getMessage(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 		return
 	}
-	cmd.PanicAndRespond(err, c)
+	if err != nil {
+		cmd.ErrorResponse(err, c)
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, msg)
 }

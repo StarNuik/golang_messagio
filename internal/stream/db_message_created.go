@@ -49,12 +49,20 @@ func (s *DbMessageCreated) reader() *kafka.Reader {
 	return r
 }
 
-func NewDbMessageCreated(brokerUrl string, messageSize int) *DbMessageCreated {
+func NewDbMessageCreated(brokerUrl string, messageSize int) (*DbMessageCreated, error) {
+	const topic = "db.message.created"
+
+	conn, err := kafka.Dial("tcp", brokerUrl)
+	if err != nil {
+		return nil, err
+	}
+	conn.Close()
+
 	return &DbMessageCreated{
 		broker:   brokerUrl,
 		maxBytes: messageSize,
-		topic:    "db.message.created",
-	}
+		topic:    topic,
+	}, nil
 }
 
 func (s *DbMessageCreated) Publish(ctx context.Context, msg model.Message) error {

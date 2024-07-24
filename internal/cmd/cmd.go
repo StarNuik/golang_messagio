@@ -8,26 +8,18 @@ import (
 	"github.com/starnuik/golang_messagio/internal/api"
 )
 
-// calls os.Exit on err != nil
-func Panic(err error) {
+// panics on err != nil
+func PanicIf(err error) {
 	if err != nil {
-		// todo: os.Exit doesnt let the go runtime to run defer-ed code
-		log.Panicln("ERROR: ", err)
+		log.Panicln(err)
 	}
 }
 
-// calls os.Exit on err != nil, send an http.InternalServerError
-func PanicAndRespond(err error, c *gin.Context) {
-	if err != nil {
-		errorResponse(err, c, http.StatusInternalServerError)
-		Panic(err)
-	}
-}
-
-// sends an http.BadRequest, doesn't call os.Exit
+// sends an http.BadRequest
 func ErrorResponse(err error, c *gin.Context) {
 	if err != nil {
 		errorResponse(err, c, http.StatusBadRequest)
+		log.Println(err)
 	}
 }
 

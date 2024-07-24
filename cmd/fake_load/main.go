@@ -23,7 +23,7 @@ func randBetween(min int, max int) int {
 
 func readWords(path string) []string {
 	file, err := os.Open(path)
-	cmd.Panic(err)
+	cmd.PanicIf(err)
 	defer file.Close()
 
 	words := []string{}
@@ -62,7 +62,7 @@ func postRequest() {
 	res, err := client.R().
 		SetBody(req).
 		Post(endpoint)
-	cmd.Panic(err)
+	cmd.PanicIf(err)
 
 	if !isStatusSuccess(res.StatusCode()) {
 		log.Println(endpoint, "endpoint failed with", res.StatusCode(), ", body:", string(res.Body()))
