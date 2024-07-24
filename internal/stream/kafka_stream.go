@@ -25,8 +25,6 @@ func newStream(brokerUrl string, topic string, messageSize int) *kafkaStream {
 }
 
 func (s *kafkaStream) close() error {
-	// it is more important to close the reader first
-	// to allow the broker to send messages to other consumers
 	if s.sub != nil {
 		err := s.sub.Close()
 		if err != nil {

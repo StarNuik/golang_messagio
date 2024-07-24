@@ -36,7 +36,7 @@ func readWords(path string) []string {
 		words = append(words, word)
 	}
 
-	// shrink, just in case
+	// shrink the slice, just in case
 	words = append([]string{}, words...)
 	return words
 }

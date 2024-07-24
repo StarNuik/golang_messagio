@@ -1,4 +1,4 @@
-### Инфра
+### Infrastructure
 * Docker
 * Postgres
 * Kafka
