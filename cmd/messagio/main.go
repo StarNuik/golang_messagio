@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/starnuik/golang_messagio/internal"
 	"github.com/starnuik/golang_messagio/internal/cmd"
 	"github.com/starnuik/golang_messagio/internal/model"
 	"github.com/starnuik/golang_messagio/internal/stream"
@@ -35,13 +36,12 @@ func main() {
 	defer log.Println("cleaned up")
 
 	var err error
-	metrics, err = model.NewMetricsModel(context.Background(), postgresUrl)
+	dbPool, err := internal.NewSqlPool(context.Background(), postgresUrl)
 	cmd.PanicIf(err)
-	defer metrics.Close()
+	defer dbPool.Close()
 
-	messages, err = model.NewMessagesModel(context.Background(), postgresUrl)
-	cmd.PanicIf(err)
-	defer messages.Close()
+	metrics = model.NewMetricsModel(dbPool)
+	messages = model.NewMessagesModel(dbPool)
 
 	messageCreated, err = stream.NewDbMessageCreated(kafkaUrl, 10e3)
 	cmd.PanicIf(err)

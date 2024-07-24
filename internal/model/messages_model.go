@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/starnuik/golang_messagio/internal"
 )
 
 type MessagesModel struct {
@@ -21,23 +20,15 @@ type Message struct {
 	IsProcessed bool
 }
 
-func NewMessagesModel(ctx context.Context, dbUrl string) (*MessagesModel, error) {
-	pool, err := internal.NewSqlPool(ctx, dbUrl)
-	if err != nil {
-		return nil, err
-	}
-	return &MessagesModel{sql: pool}, nil
-}
-
-func (m *MessagesModel) Close() {
-	m.sql.Close()
+func NewMessagesModel(pool *pgxpool.Pool) *MessagesModel {
+	return &MessagesModel{sql: pool}
 }
 
 func (m *MessagesModel) Insert(ctx context.Context, msg Message) error {
 	tag, err := m.sql.Exec(
 		ctx,
-		"INSERT INTO messages (msg_id, msg_created, msg_content) VALUES ($1, $2, $3)",
-		msg.Id, msg.Created, msg.Content)
+		"INSERT INTO messages (msg_id, msg_created, msg_content, msg_is_processed) VALUES ($1, $2, $3, $4)",
+		msg.Id, msg.Created, msg.Content, msg.IsProcessed)
 	if err != nil {
 		return err
 	}

@@ -8,13 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// type SqlPool struct {
+// 	*pgxpool.Pool
+// 	Context context.Context
+// 	cancel  context.CancelFunc
+// }
+
 func NewSqlPool(ctx context.Context, pgUrl string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(pgUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+	config.AfterConnect = func(_ context.Context, conn *pgx.Conn) error {
 		pgxuuid.Register(conn.TypeMap())
 		return nil
 	}
@@ -31,4 +37,15 @@ func NewSqlPool(ctx context.Context, pgUrl string) (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
+	// subCtx, cancel := context.WithCancel(ctx)
+	// return &SqlPool{
+	// 	Pool:    pool,
+	// 	Context: subCtx,
+	// 	cancel:  cancel,
+	// }, nil
 }
+
+// func (sqlPool *SqlPool) Close() {
+// 	sqlPool.cancel()
+// 	sqlPool.Pool.Close()
+// }

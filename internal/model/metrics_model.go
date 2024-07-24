@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/starnuik/golang_messagio/internal"
 )
 
 type MetricsModel struct {
@@ -23,12 +22,8 @@ type Metrics struct {
 	OrphanMessages int
 }
 
-func NewMetricsModel(ctx context.Context, dbUrl string) (*MetricsModel, error) {
-	pool, err := internal.NewSqlPool(ctx, dbUrl)
-	if err != nil {
-		return nil, err
-	}
-	return &MetricsModel{sql: pool}, nil
+func NewMetricsModel(pool *pgxpool.Pool) *MetricsModel {
+	return &MetricsModel{sql: pool}
 }
 
 func (m *MetricsModel) Close() {
