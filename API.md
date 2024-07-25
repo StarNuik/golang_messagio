@@ -69,12 +69,3 @@ Returns global info about the messages storage
     "OrphanMessages": [number of messages that are >1 minute old and are not processed],
 }
 ```
-
-### Error response
-Shared by all endpoints
-```
-{
-    "status": [error code],
-    "description": [internal error description],
-}
-```
