@@ -94,7 +94,5 @@ services:
     - internal
     volumes:
     - ./words.txt:/app/words.txt
-    labels:
-      - "traefik.enable=false"
     environment:
       SERVICE_MESSAGE_URL: http://service-messagio:8080/message
