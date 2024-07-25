@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"math"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -55,6 +56,9 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 	}
 
 	metrics.ProcessedRatio = float64(metrics.ProcessedTotal) / float64(metrics.Messages.Total)
+	if math.IsNaN(metrics.ProcessedRatio) {
+		metrics.ProcessedRatio = 0.0
+	}
 
 	err := queryInt(m.sql, ctx,
 		"select count(*) from messages where msg_is_processed = false and msg_created < now() - interval '1 minute';",

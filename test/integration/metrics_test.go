@@ -13,6 +13,13 @@ func TestMetricsGet(t *testing.T) {
 	metrics := model.NewMetricsModel(db)
 
 	resetDb()
+
+	have, err := metrics.Get(ctx)
+	assert.Nil(err)
+	assert.Equal(0, have.Messages.Total)
+	assert.Equal(0, have.ProcessedTotal)
+	assert.Equal(0.0, have.ProcessedRatio)
+
 	for range 5 {
 		msg := newMessage()
 		_ = messages.Insert(ctx, msg)
@@ -23,7 +30,7 @@ func TestMetricsGet(t *testing.T) {
 		_ = messages.Insert(ctx, msg)
 	}
 
-	have, err := metrics.Get(ctx)
+	have, err = metrics.Get(ctx)
 	assert.Nil(err)
 
 	assert.Equal(10, have.Messages.Total)
