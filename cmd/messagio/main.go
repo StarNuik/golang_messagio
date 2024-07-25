@@ -54,7 +54,7 @@ func main() {
 	router.GET("/healthcheck", getHealthcheck)
 	router.POST("/message", postMessage)
 	router.GET("/query/metrics", getMetrics)
-	router.GET("/query/message", getMessage)
+	router.POST("/query/message", getMessage)
 
 	router.Run("0.0.0.0:8080")
 }

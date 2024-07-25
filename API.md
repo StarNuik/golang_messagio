@@ -31,7 +31,7 @@ Adds a message to the db and queues it for processing
 ### Query message
 Returns message info and processed status by id
 #### Endpoint
-`GET /query/message`
+`POST /query/message`
 #### Request
 ```
 {
