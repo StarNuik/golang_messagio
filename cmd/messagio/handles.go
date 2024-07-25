@@ -23,25 +23,25 @@ func postMessage(c *gin.Context) {
 
 	err := c.BindJSON(&req)
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "could not parse json body", http.StatusBadRequest)
 		return
 	}
 
 	msg, err := message.Validate(req)
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "invalid request data", http.StatusBadRequest)
 		return
 	}
 
-	err = messages.Insert(context.TODO(), msg)
+	err = messages.Insert(context.Background(), msg)
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "database insert error", http.StatusInternalServerError)
 		return
 	}
 
-	err = messageCreated.Publish(context.TODO(), msg)
+	err = messageCreated.Publish(context.Background(), msg)
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "broker message publishing error", http.StatusInternalServerError)
 		return
 	}
 
@@ -59,9 +59,9 @@ func processMessage(msg model.Message) {
 }
 
 func getMetrics(c *gin.Context) {
-	metrics, err := metrics.Get(context.TODO())
+	metrics, err := metrics.Get(context.Background())
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "database read error", http.StatusInternalServerError)
 		return
 	}
 
@@ -73,17 +73,17 @@ func getMessage(c *gin.Context) {
 
 	err := c.BindJSON(&req)
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "could not parse json body", http.StatusBadRequest)
 		return
 	}
 
-	msg, err := messages.Get(context.TODO(), req.Id)
+	msg, err := messages.Get(context.Background(), req.Id)
 	if errors.Is(err, pgx.ErrNoRows) {
-		c.Status(http.StatusNotFound)
+		cmd.ErrorResponse(c, err, "could not find such entry", http.StatusNotFound)
 		return
 	}
 	if err != nil {
-		cmd.ErrorResponse(err, c)
+		cmd.ErrorResponse(c, err, "database read error", http.StatusInternalServerError)
 		return
 	}
 

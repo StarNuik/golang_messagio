@@ -1,3 +1,3 @@
 curl localhost/query/message \
-    --request "GET" \
+    --request "POST" \
     --data "{\"Id\":\"$1\"}"
