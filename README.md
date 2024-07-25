@@ -2,10 +2,10 @@
 
 ## API
 For more info refer to [API.md](API.md)<br>
-Check service status: `GET /healthcheck`<br>
 Send message: `POST /message`<br>
 Query message: `GET /query/message`<br>
 Query metrics: `GET /query/metrics`<br>
+Check service status: `GET /healthcheck`<br>
 
 ## Deployment
 ```
