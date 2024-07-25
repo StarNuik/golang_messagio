@@ -16,8 +16,8 @@ func TestMetricsGet(t *testing.T) {
 
 	have, err := metrics.Get(ctx)
 	assert.Nil(err)
-	assert.Equal(0, have.Messages.Total)
-	assert.Equal(0, have.ProcessedTotal)
+	assert.Equal(int64(0), have.Messages.Total)
+	assert.Equal(int64(0), have.ProcessedTotal)
 	assert.Equal(0.0, have.ProcessedRatio)
 
 	for range 5 {
@@ -33,7 +33,7 @@ func TestMetricsGet(t *testing.T) {
 	have, err = metrics.Get(ctx)
 	assert.Nil(err)
 
-	assert.Equal(10, have.Messages.Total)
-	assert.Equal(5, have.ProcessedTotal)
+	assert.Equal(int64(10), have.Messages.Total)
+	assert.Equal(int64(5), have.ProcessedTotal)
 	assert.Equal(0.5, have.ProcessedRatio)
 }

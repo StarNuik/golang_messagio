@@ -13,21 +13,21 @@ type MetricsModel struct {
 
 type Metrics struct {
 	Messages struct {
-		Total      int
-		LastDay    int
-		LastHour   int
-		LastMinute int
+		Total      int64
+		LastDay    int64
+		LastHour   int64
+		LastMinute int64
 	}
-	ProcessedTotal int
+	ProcessedTotal int64
 	ProcessedRatio float64
-	OrphanMessages int
+	OrphanMessages int64
 }
 
 func NewMetricsModel(pool *pgxpool.Pool) *MetricsModel {
 	return &MetricsModel{sql: pool}
 }
 
-func queryInt(sql *pgxpool.Pool, ctx context.Context, query string, out *int) error {
+func queryInt(sql *pgxpool.Pool, ctx context.Context, query string, out *int64) error {
 	row := sql.QueryRow(ctx, query)
 
 	err := row.Scan(out)
@@ -38,7 +38,7 @@ func (m *MetricsModel) Get(ctx context.Context) (Metrics, error) {
 	metrics := Metrics{}
 
 	table := []struct {
-		dest  *int
+		dest  *int64
 		query string
 	}{
 		{&metrics.Messages.Total, "SELECT count(*) FROM messages;"},
