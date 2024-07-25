@@ -1,11 +1,11 @@
 # golang_messagio
 
 ## API
-For more info refer to [API.md](API.md)
-Check service status: `GET /healthcheck`
-Send message: `POST /message`
-Query message: `GET /query/message`
-Query metrics: `GET /query/metrics`
+For more info refer to [API.md](API.md)<br>
+Check service status: `GET /healthcheck`<br>
+Send message: `POST /message`<br>
+Query message: `GET /query/message`<br>
+Query metrics: `GET /query/metrics`<br>
 
 ## Deployment
 ```
