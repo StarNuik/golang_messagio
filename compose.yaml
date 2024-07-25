@@ -15,6 +15,7 @@ services:
   # https://hub.docker.com/r/bitnami/kafka/
   kafka:
     image: bitnami/kafka:3.5
+    restart: unless-stopped
     networks:
     - internal
     volumes:
@@ -35,6 +36,7 @@ services:
       retries: 60
   postgres:
     image: postgres:latest
+    restart: unless-stopped
     networks:
     - internal
     volumes:
