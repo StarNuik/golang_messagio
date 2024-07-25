@@ -20,4 +20,4 @@ docker-compose up (-d)
 * Kafka - message broker
 * pgmigrate - database migrations
 * service-messagio - spec service
-* service-fake-load - stress-test service, send 10e3-10e4 messages / 60 seconds
+* service-fake-load - stress-test service, send 10e3-10e4 messages / 60 seconds (disabled by default)

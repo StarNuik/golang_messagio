@@ -83,16 +83,16 @@ services:
     environment:
       SERVICE_KAFKA_URL: kafka:9092
       SERVICE_POSTGRES_URL: postgres://pg:insecure@postgres:5432/dev
-  service-fake-load:
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./golang-service.dockerfile
-      args:
-      - SERVICE=fake_load
-    networks:
-    - internal
-    volumes:
-    - ./words.txt:/app/words.txt
-    environment:
-      SERVICE_MESSAGE_URL: http://service-messagio:8080/message
+  # service-fake-load:
+  #   restart: unless-stopped
+  #   build:
+  #     context: .
+  #     dockerfile: ./golang-service.dockerfile
+  #     args:
+  #     - SERVICE=fake_load
+  #   networks:
+  #   - internal
+  #   volumes:
+  #   - ./words.txt:/app/words.txt
+  #   environment:
+  #     SERVICE_MESSAGE_URL: http://service-messagio:8080/message
